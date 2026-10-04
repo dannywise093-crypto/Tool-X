@@ -91,10 +91,66 @@ def install():
     print("Example: bash <(curl -s https://raw.githubusercontent.com/dannywise093-crypto/Tool-X/main/setup.sh)")
 
 
+def clear_screen():
+    os.system("clear")
+
+
+def print_menu():
+    print("╔══════════════════════════════════════════════╗")
+    print("║                    TOOL-X                    ║")
+    print("╠══════════════════════════════════════════════╣")
+    for index, category in enumerate(CATEGORIES, 1):
+        print(f"║ {index:>2}. {category:<37} ║")
+    print("║                                              ║")
+    print("║  0. Exit                                     ║")
+    print("╚══════════════════════════════════════════════╝")
+
+
+def category_menu(index):
+    category = CATEGORIES[index - 1]
+    while True:
+        clear_screen()
+        print(f"╔══════════════════════════════════════════════╗")
+        print(f"║ {category:^44} ║")
+        print("╠══════════════════════════════════════════════╣")
+        if category == "Programming languages":
+            for number, language in enumerate(PROGRAMMING_LANGUAGES, 1):
+                print(f"║ {number:>2}. {language:<37} ║")
+        else:
+            print("║ Category selected.                            ║")
+            print("║ More entries can be added safely later.      ║")
+        print("║                                              ║")
+        print("║  0. Back                                     ║")
+        print("╚══════════════════════════════════════════════╝")
+        choice = input("Select an option: ").strip().lower()
+        if choice == "0":
+            return
+        if category == "Programming languages" and choice.isdigit():
+            number = int(choice)
+            if 1 <= number <= len(PROGRAMMING_LANGUAGES):
+                print(f"Selected: {PROGRAMMING_LANGUAGES[number - 1]}")
+                input("Press Enter to continue...")
+
+
+def interactive_menu():
+    while True:
+        clear_screen()
+        print_menu()
+        choice = input("Select a category: ").strip().lower()
+        if choice in {"0", "x", "q"}:
+            return 0
+        if choice.isdigit():
+            number = int(choice)
+            if 1 <= number <= len(CATEGORIES):
+                category_menu(number)
+                continue
+        print("Invalid selection.")
+        input("Press Enter to continue...")
+
+
 def main():
     if len(sys.argv) < 2:
-        print(HELP_TEXT)
-        return 0
+        return interactive_menu()
 
     command = sys.argv[1].lower()
 
