@@ -16,14 +16,44 @@ TOOL_X_HOME = os.path.expanduser("~/.tool-x")
 HELP_TEXT = """
 Tool-X
 
+Categories:
+  Base tools
+  Developer tools
+  Programming languages
+  Security tools
+  Cloud tools
+  DevOps
+  AI/ML
+  Web3
+  Databases
+  Utilities
+
 Commands:
   help          Show this screen
   status        Show installation status
-  languages     Show language runtimes
+  languages     Show programming languages
   tools         Show tool categories
   doctor        Show installation health
   install       Install the default environment
 """
+
+CATEGORIES = [
+    "Base tools",
+    "Developer tools",
+    "Programming languages",
+    "Security tools",
+    "Cloud tools",
+    "DevOps",
+    "AI/ML",
+    "Web3",
+    "Databases",
+    "Utilities",
+]
+
+PROGRAMMING_LANGUAGES = [
+    "C", "C++", "C#", "Java", "Python", "JavaScript", "TypeScript",
+    "Go", "Rust", "Ruby", "PHP", "Kotlin", "Bash", "PowerShell", "SQL",
+]
 
 def status():
     print(f"Tool-X Home: {TOOL_X_HOME}")
@@ -43,11 +73,17 @@ def doctor():
 
 
 def languages():
-    print("C, C++, C#, Java, Python, JavaScript, TypeScript, Go, Rust, Ruby, PHP, Kotlin, Bash, PowerShell, SQL")
+    print("Programming languages")
+    print("=====================")
+    for language in PROGRAMMING_LANGUAGES:
+        print(f"- {language}")
 
 
 def tools():
-    print("Base tools, developer tools, security tools, cloud tools, DevOps, AI/ML, Web3, databases, utilities")
+    print("Tool-X categories")
+    print("=================")
+    for category in CATEGORIES:
+        print(f"- {category}")
 
 
 def install():
