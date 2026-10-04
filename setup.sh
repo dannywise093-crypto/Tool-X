@@ -24,6 +24,11 @@ Options:
   --check        Check whether the current OS is supported
   --list         Show supported tool categories
 
+Supported Platforms:
+  - Linux (Ubuntu/Debian)
+  - macOS
+  - Windows (Git Bash / WSL)
+
 Notes:
   Linux is the primary supported target.
   macOS and Windows are included as optional platform modules.
@@ -35,7 +40,8 @@ check_support() {
     darwin*) echo "Supported: macOS" ;;
     linux-gnu*) echo "Supported: Linux (Ubuntu/Debian)" ;;
     msys*|cygwin*|win32*) echo "Supported: Windows" ;;
-    *) echo "Unsupported: $OSTYPE" ; exit 1 ;;
+    linux-andro*) echo "Android detected. Use a Linux distribution instead." ; exit 1 ;;
+    *) echo "Unsupported: $OSTYPE. Supported: Linux (Ubuntu/Debian), macOS, Windows" ; exit 1 ;;
   esac
 }
 
@@ -87,6 +93,24 @@ echo ""
 echo "Tool-X Multi-Platform Installer"
 echo "=============================="
 echo ""
+echo "Detecting platform: $OSTYPE"
+echo ""
+
+# Validate platform early
+case "$OSTYPE" in
+  darwin*|linux-gnu*|msys*|cygwin*|win32*) ;;
+  linux-andro*)
+    echo "[!] Android detected. Tool-X is designed for Linux (Ubuntu/Debian), macOS, or Windows."
+    echo "[!] Please use a full Linux distribution like Ubuntu or Debian."
+    exit 1
+    ;;
+  *)
+    echo "[!] Unsupported platform: $OSTYPE"
+    echo "[!] Supported platforms: Linux (Ubuntu/Debian), macOS, Windows"
+    exit 1
+    ;;
+esac
+
 echo "Downloading modules..."
 
 download_module "common"
@@ -125,6 +149,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
   if ! grep -Eq 'Ubuntu|Debian' /etc/os-release 2>/dev/null; then
     echo "[!] This version is written for Ubuntu/Debian Linux."
+    echo "[!] Detected: $(grep '^NAME=' /etc/os-release 2>/dev/null || echo 'Unknown')"
     exit 1
   fi
 
@@ -173,9 +198,6 @@ elif [[ "$OSTYPE" == "msys"* || "$OSTYPE" == "cygwin"* || "$OSTYPE" == "win32"* 
   install_web3
   install_toolx_cli
 
-else
-  echo "[!] Unsupported platform: ${OSTYPE}"
-  exit 1
 fi
 
 echo ""
