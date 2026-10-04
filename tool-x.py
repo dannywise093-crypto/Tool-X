@@ -1,36 +1,48 @@
 #!/usr/bin/env python3
-"""Tool-X CLI entry point.
-
-Provides a lightweight Python wrapper for the shell tool launcher and future extensibility.
-"""
-
 import os
 import sys
 
-HOME_DIR = os.path.expanduser("~")
-TOOL_X_HOME = os.path.join(HOME_DIR, ".tool-x")
+TOOL_X_HOME = os.path.expanduser("~/.tool-x")
 
+HELP_TEXT = """
+Tool-X
 
-def main() -> int:
+Commands:
+  help          Show this screen
+  status        Show installation status
+  languages     Show language runtimes
+  tools         Show tool categories
+"""
+
+def main():
     if len(sys.argv) < 2:
-        print("Tool-X v4.0")
-        print("Use: toolx help")
+        print(HELP_TEXT)
         return 0
 
-    command = sys.argv[1]
+    command = sys.argv[1].lower()
+
     if command in {"help", "--help", "-h"}:
-        print("Tool-X v4.0")
-        print("Commands: help, status, recon, docker, k8s, cloud, ai, web3")
+        print(HELP_TEXT)
         return 0
 
     if command == "status":
         print(f"Tool-X Home: {TOOL_X_HOME}")
-        print("Installed successfully.")
+        if os.path.isdir(TOOL_X_HOME):
+            print("Installed")
+        else:
+            print("Not installed")
         return 0
 
-    print(f"Command '{command}' is available via the shell launcher.")
-    return 0
+    if command == "languages":
+        print("C, C++, C#, Java, Python, JavaScript, TypeScript, Go, Rust, Ruby, PHP, Kotlin, Bash, PowerShell, SQL")
+        return 0
 
+    if command == "tools":
+        print("Dev tools, security tools, cloud tools, DevOps, AI/ML, Web3, databases, utilities")
+        return 0
+
+    print(f"Unknown command: {command}")
+    return 1
 
 if __name__ == "__main__":
     raise SystemExit(main())

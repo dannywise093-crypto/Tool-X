@@ -1,51 +1,94 @@
-# Tool-X v4.0
+# Tool-X
 
-A modern universal installer and toolkit for security, cloud, DevOps, AI/ML, and software development.
+Tool-X is a multi-platform developer environment installer designed to bootstrap a practical software toolchain on Linux, macOS, and Windows.
 
-## Overview
-
-Tool-X is a comprehensive environment setup tool designed to install a broad range of developer, security, cloud, and infrastructure utilities. It supports multiple operating systems and package managers and keeps the installation process resilient by continuing even when some packages fail.
+It is built to install real development tools, language runtimes, cloud CLIs, security tooling, DevOps utilities, AI/ML dependencies, and Web3 tooling using native package managers where possible.
 
 ## Features
 
-- Kali Linux security tools
-- Cloud CLI tools (AWS, GCP, Azure, DigitalOcean)
-- DevOps tools (Docker, Kubernetes, Terraform, Ansible, Vagrant, Packer)
-- Programming languages (Python, Node.js, Go, Rust, Ruby, Java)
-- Database systems (PostgreSQL, MySQL, MongoDB, Redis, SQLite)
-- Python package ecosystem
-- Node.js packages and tooling
-- AI/ML tools (Jupyter, transformers, Ollama)
-- Web3 and blockchain tools
-- Security resource repositories (SecLists, Nuclei, Exploit DB, PEASS, PayloadsAllTheThings)
-- Global `toolx` command wrapper
-- Shell integration and installation reporting
+- Ubuntu/Debian Linux support
+- macOS support
+- Windows support
+- Real package-manager-based installs
+- Language runtime installation
+- Dev tooling
+- Security tooling
+- Cloud tooling
+- DevOps tooling
+- AI/ML environment setup
+- Web3 tooling
+- Unified `toolx` launcher
+
+## Supported Platforms
+
+- Ubuntu / Debian Linux
+- macOS
+- Windows (Git Bash / WSL / native PowerShell environments)
 
 ## Quick Start
 
+### Linux
+
 ```bash
-bash <(curl -s https://raw.githubusercontent.com/dannywise093-crypto/Tool-X/main/setup.sh)
+git clone https://github.com/dannywise093-crypto/Tool-X.git
+cd Tool-X
+chmod +x setup.sh
+./setup.sh
 ```
 
-## Commands
+### macOS
 
-After installation, use:
+```bash
+git clone https://github.com/dannywise093-crypto/Tool-X.git
+cd Tool-X
+chmod +x setup.sh
+./setup.sh
+```
+
+### Windows
+
+Use Git Bash or WSL:
+
+```bash
+git clone https://github.com/dannywise093-crypto/Tool-X.git
+cd Tool-X
+chmod +x setup.sh
+./setup.sh
+```
+
+## After Installation
 
 ```bash
 toolx help
-toolx status
-toolx recon
-toolx docker
-toolx k8s
-toolx cloud
-toolx ai
 ```
 
-## Requirements
+## Project Structure
 
-- Linux, macOS, or Termux-based environment
-- Internet access
-- Root or sudo access for package installs
+```text
+Tool-X/
+├── README.md
+├── .gitignore
+├── setup.sh
+├── tool-x.py
+├── modules/
+│   ├── common.sh
+│   ├── linux_base.sh
+│   ├── macos_base.sh
+│   ├── windows_base.sh
+│   ├── languages.sh
+│   ├── devtools.sh
+│   ├── security.sh
+│   ├── cloud.sh
+│   ├── devops.sh
+│   ├── ai.sh
+│   ├── web3.sh
+│   └── toolx_cli.sh
+└── .tool-x/
+```
+
+## Notes
+
+This project is intended to be a practical developer environment bootstrapper rather than a placeholder repository. The design emphasizes actual tool installation workflows and real developer workflows across major operating systems.
 
 ## License
 
