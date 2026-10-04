@@ -96,7 +96,9 @@ CUSTOM_CATALOG = {
         "url": "https://git-scm.com/",
         "category": ["Tool-X Originals", "Base tools", "Developer tools"],
         "dependency": [],
-        "package_manager": "system"
+        "package_manager": "system",
+        "command": "git",
+        "package": "git"
     },
     "toolx-curl": {
         "name": "cURL",
@@ -104,7 +106,9 @@ CUSTOM_CATALOG = {
         "url": "https://curl.se/",
         "category": ["Tool-X Originals", "Base tools", "Cloud tools"],
         "dependency": [],
-        "package_manager": "system"
+        "package_manager": "system",
+        "command": "curl",
+        "package": "curl"
     },
     "toolx-wget": {
         "name": "Wget",
@@ -112,7 +116,9 @@ CUSTOM_CATALOG = {
         "url": "https://www.gnu.org/software/wget/",
         "category": ["Tool-X Originals", "Base tools", "Cloud tools"],
         "dependency": [],
-        "package_manager": "system"
+        "package_manager": "system",
+        "command": "wget",
+        "package": "wget"
     },
     "toolx-openssh": {
         "name": "OpenSSH",
@@ -120,7 +126,9 @@ CUSTOM_CATALOG = {
         "url": "https://www.openssh.com/",
         "category": ["Tool-X Originals", "Base tools", "Cloud tools", "DevOps"],
         "dependency": [],
-        "package_manager": "system"
+        "package_manager": "system",
+        "command": "openssh",
+        "package": "openssh"
     },
     "toolx-python": {
         "name": "Python",
@@ -128,7 +136,9 @@ CUSTOM_CATALOG = {
         "url": "https://www.python.org/",
         "category": ["Tool-X Originals", "Developer tools", "Programming languages", "AI/ML"],
         "dependency": [],
-        "package_manager": "system"
+        "package_manager": "system",
+        "command": "python",
+        "package": "python"
     },
     "toolx-nodejs": {
         "name": "Node.js",
@@ -136,7 +146,9 @@ CUSTOM_CATALOG = {
         "url": "https://nodejs.org/",
         "category": ["Tool-X Originals", "Developer tools", "Programming languages", "Web3"],
         "dependency": [],
-        "package_manager": "system"
+        "package_manager": "system",
+        "command": "nodejs",
+        "package": "nodejs"
     },
     "toolx-clang": {
         "name": "Clang",
@@ -144,7 +156,9 @@ CUSTOM_CATALOG = {
         "url": "https://clang.llvm.org/",
         "category": ["Tool-X Originals", "Developer tools", "Programming languages"],
         "dependency": [],
-        "package_manager": "system"
+        "package_manager": "system",
+        "command": "clang",
+        "package": "clang"
     },
     "toolx-gcc": {
         "name": "GCC",
@@ -152,7 +166,9 @@ CUSTOM_CATALOG = {
         "url": "https://gcc.gnu.org/",
         "category": ["Tool-X Originals", "Developer tools", "Programming languages"],
         "dependency": [],
-        "package_manager": "system"
+        "package_manager": "system",
+        "command": "gcc",
+        "package": "gcc"
     },
     "toolx-cmake": {
         "name": "CMake",
@@ -160,7 +176,9 @@ CUSTOM_CATALOG = {
         "url": "https://cmake.org/",
         "category": ["Tool-X Originals", "Developer tools", "DevOps"],
         "dependency": [],
-        "package_manager": "system"
+        "package_manager": "system",
+        "command": "cmake",
+        "package": "cmake"
     },
     "toolx-gdb": {
         "name": "GDB",
@@ -168,7 +186,9 @@ CUSTOM_CATALOG = {
         "url": "https://www.sourceware.org/gdb/",
         "category": ["Tool-X Originals", "Developer tools"],
         "dependency": [],
-        "package_manager": "system"
+        "package_manager": "system",
+        "command": "gdb",
+        "package": "gdb"
     },
     "toolx-sqlite": {
         "name": "SQLite",
@@ -176,7 +196,9 @@ CUSTOM_CATALOG = {
         "url": "https://www.sqlite.org/",
         "category": ["Tool-X Originals", "Databases"],
         "dependency": [],
-        "package_manager": "system"
+        "package_manager": "system",
+        "command": "sqlite3",
+        "package": "sqlite"
     },
     "toolx-rsync": {
         "name": "Rsync",
@@ -184,7 +206,9 @@ CUSTOM_CATALOG = {
         "url": "https://rsync.samba.org/",
         "category": ["Tool-X Originals", "Cloud tools", "DevOps"],
         "dependency": [],
-        "package_manager": "system"
+        "package_manager": "system",
+        "command": "rsync",
+        "package": "rsync"
     },
     "toolx-rclone": {
         "name": "Rclone",
@@ -192,7 +216,9 @@ CUSTOM_CATALOG = {
         "url": "https://rclone.org/",
         "category": ["Tool-X Originals", "Cloud tools"],
         "dependency": [],
-        "package_manager": "system"
+        "package_manager": "system",
+        "command": "rclone",
+        "package": "rclone"
     },
     "toolx-jq": {
         "name": "JQ",
@@ -200,7 +226,9 @@ CUSTOM_CATALOG = {
         "url": "https://jqlang.org/",
         "category": ["Tool-X Originals", "Utilities", "Cloud tools"],
         "dependency": [],
-        "package_manager": "system"
+        "package_manager": "system",
+        "command": "jq",
+        "package": "jq"
     },
     "toolx-tmux": {
         "name": "Tmux",
@@ -208,7 +236,9 @@ CUSTOM_CATALOG = {
         "url": "https://github.com/tmux/tmux",
         "category": ["Tool-X Originals", "Utilities", "DevOps"],
         "dependency": [],
-        "package_manager": "system"
+        "package_manager": "system",
+        "command": "tmux",
+        "package": "tmux"
     },
     "toolx-nano": {
         "name": "Nano",
@@ -216,7 +246,9 @@ CUSTOM_CATALOG = {
         "url": "https://www.nano-editor.org/",
         "category": ["Tool-X Originals", "Utilities"],
         "dependency": [],
-        "package_manager": "system"
+        "package_manager": "system",
+        "command": "nano",
+        "package": "nano"
     },
     "toolx-vim": {
         "name": "Vim",
@@ -224,7 +256,9 @@ CUSTOM_CATALOG = {
         "url": "https://www.vim.org/",
         "category": ["Tool-X Originals", "Utilities"],
         "dependency": [],
-        "package_manager": "system"
+        "package_manager": "system",
+        "command": "vim",
+        "package": "vim"
     },
     "toolx-tree": {
         "name": "Tree",
@@ -232,7 +266,9 @@ CUSTOM_CATALOG = {
         "url": "https://oldmanprogrammer.net/source.php?dir=projects/tree",
         "category": ["Tool-X Originals", "Utilities"],
         "dependency": [],
-        "package_manager": "system"
+        "package_manager": "system",
+        "command": "tree",
+        "package": "tree"
     },
     "toolx-openssl": {
         "name": "OpenSSL",
@@ -240,7 +276,9 @@ CUSTOM_CATALOG = {
         "url": "https://www.openssl.org/",
         "category": ["Tool-X Originals", "Security tools"],
         "dependency": [],
-        "package_manager": "system"
+        "package_manager": "system",
+        "command": "openssl",
+        "package": "openssl"
     },
     "toolx-gnupg": {
         "name": "GnuPG",
@@ -248,7 +286,9 @@ CUSTOM_CATALOG = {
         "url": "https://gnupg.org/",
         "category": ["Tool-X Originals", "Security tools"],
         "dependency": [],
-        "package_manager": "system"
+        "package_manager": "system",
+        "command": "gpg",
+        "package": "gnupg"
     }
 }
 
@@ -281,12 +321,13 @@ def tool_installed(tool_key):
     return False
 
 def tool_command_available(info):
-    name = info.get("name", "")
-    candidates = [name, name.lower().replace(" ", "-")]
-    for candidate in candidates:
-        if candidate and shutil.which(candidate):
-            return True
-    return False
+    candidates = []
+    command = info.get("command")
+    if command:
+        candidates.append(command)
+    name = str(info.get("name", ""))
+    candidates.extend([name, name.lower().replace(" ", "-")])
+    return any(candidate and shutil.which(candidate) for candidate in candidates)
 
 def get_package_manager():
     if shutil.which("pkg"):
@@ -352,18 +393,19 @@ def install_tool(key, info):
             return True
         manager_name = get_package_manager()
         if not manager_name:
+            print("No supported package manager found.")
             return False
-        package_name = str(info.get("name", key)).split()[0]
+        package_name = info.get("package") or str(info.get("name", key)).split()[0].lower()
         if manager_name == "pkg":
-            cmd = ["pkg", "install", "-y", package_name.lower()]
+            cmd = ["pkg", "install", "-y", package_name]
         elif manager_name in {"apt", "apt-get"}:
-            cmd = [manager_name, "install", "-y", package_name.lower()]
+            cmd = [manager_name, "install", "-y", package_name]
         elif manager_name == "pacman":
-            cmd = ["pacman", "-S", "--noconfirm", package_name.lower()]
+            cmd = ["pacman", "-S", "--noconfirm", package_name]
         elif manager_name == "dnf":
-            cmd = ["dnf", "install", "-y", package_name.lower()]
+            cmd = ["dnf", "install", "-y", package_name]
         else:
-            cmd = ["brew", "install", package_name.lower()]
+            cmd = ["brew", "install", package_name]
         print("Running:", " ".join(cmd))
         result = subprocess.run(cmd, check=False)
         if result.returncode == 0:
@@ -401,6 +443,35 @@ def install_tool(key, info):
     save_json(INSTALLED_FILE, installed)
     print(f"Installed: {name}")
     print(f"Location: {destination}")
+    return True
+
+def toggle_favorite(key):
+    favorites = load_json(FAVORITES_FILE, [])
+    if key in favorites:
+        favorites.remove(key)
+        action = "Removed from"
+    else:
+        favorites.append(key)
+        action = "Added to"
+    save_json(FAVORITES_FILE, favorites)
+    print(f"{action} favorites.")
+    return key in favorites
+
+def uninstall_tool(key, info):
+    installed = load_json(INSTALLED_FILE, {})
+    entry = installed.get(key)
+    if not entry:
+        print("Tool-X does not have an installed record for this tool.")
+        return False
+    path = entry.get("path")
+    if path and os.path.isdir(path):
+        if os.path.isdir(os.path.join(path, ".git")):
+            shutil.rmtree(path)
+        elif os.path.abspath(path).startswith(os.path.abspath(os.path.join(TOOL_X_HOME, "tools"))):
+            shutil.rmtree(path)
+    installed.pop(key, None)
+    save_json(INSTALLED_FILE, installed)
+    print(f"Removed Tool-X record: {info.get('name', key)}")
     return True
 
 def show_tool(key, info):
