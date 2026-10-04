@@ -3,8 +3,7 @@ set -euo pipefail
 
 REPO_URL="https://raw.githubusercontent.com/dannywise093-crypto/Tool-X/main"
 SCRIPT_DIR="$(mktemp -d)"
-TRAP_CLEANUP() { rm -rf "$SCRIPT_DIR"; }
-trap TRAP_CLEANUP EXIT
+trap 'rm -rf "$SCRIPT_DIR"' EXIT
 
 export TOOL_X_HOME="${HOME}/.tool-x"
 export TOOL_X_BIN="${TOOL_X_HOME}/bin"
@@ -25,182 +24,122 @@ Options:
   --list         Show supported tool categories
 
 Supported Platforms:
+  - Termux / Android
   - Linux (Ubuntu/Debian)
   - macOS
   - Windows (Git Bash / WSL)
-
-Notes:
-  Linux is the primary supported target.
-  macOS and Windows are included as optional platform modules.
 EOF
 }
 
 check_support() {
-  case "$OSTYPE" in
+  case "${OSTYPE:-}" in
     darwin*) echo "Supported: macOS" ;;
+    linux-andro*) echo "Supported: Termux / Android" ;;
     linux-gnu*) echo "Supported: Linux (Ubuntu/Debian)" ;;
     msys*|cygwin*|win32*) echo "Supported: Windows" ;;
-    linux-andro*) echo "Android detected. Use a Linux distribution instead." ; exit 1 ;;
-    *) echo "Unsupported: $OSTYPE. Supported: Linux (Ubuntu/Debian), macOS, Windows" ; exit 1 ;;
+    *) echo "Unsupported: ${OSTYPE:-unknown}"; exit 1 ;;
   esac
 }
 
 list_tools() {
-  echo "Base tools"
-  echo "Language runtimes"
-  echo "Developer tools"
-  echo "Security tools"
-  echo "Cloud tools"
-  echo "DevOps tools"
-  echo "AI/ML tools"
-  echo "Web3 tools"
+  printf '%s\n' "Base tools" "Language runtimes" "Developer tools"     "Security tools (not installed by the Termux path)" "Cloud tools"     "DevOps tools" "AI/ML tools" "Web3 tools"
 }
 
 download_module() {
   local module_name="$1"
-  curl -s "${REPO_URL}/modules/${module_name}.sh" -o "${SCRIPT_DIR}/${module_name}.sh"
-  if [[ ! -f "${SCRIPT_DIR}/${module_name}.sh" ]]; then
+  local target="${SCRIPT_DIR}/${module_name}.sh"
+  if ! curl -fsSL "${REPO_URL}/modules/${module_name}.sh" -o "$target"; then
     echo "[!] Failed to download module: ${module_name}"
     exit 1
   fi
+  [[ -s "$target" ]] || { echo "[!] Empty module: ${module_name}"; exit 1; }
 }
 
 mkdir -p "$TOOL_X_HOME" "$TOOL_X_BIN" "$TOOL_X_TOOLS" "$TOOL_X_LOGS" "$TOOL_X_CACHE"
 
 if [[ $# -gt 0 ]]; then
   case "$1" in
-    --help|-h)
-      usage
-      exit 0
-      ;;
-    --check)
-      check_support
-      exit 0
-      ;;
-    --list)
-      list_tools
-      exit 0
-      ;;
-    *)
-      echo "Unknown option: $1"
-      usage
-      exit 1
-      ;;
+    --help|-h) usage; exit 0 ;;
+    --check) check_support; exit 0 ;;
+    --list) list_tools; exit 0 ;;
+    *) echo "Unknown option: $1"; usage; exit 1 ;;
   esac
 fi
 
-echo ""
+echo
 echo "Tool-X Multi-Platform Installer"
 echo "=============================="
-echo ""
-echo "Detecting platform: $OSTYPE"
-echo ""
+echo "Detecting platform: ${OSTYPE:-unknown}"
+echo
 
-# Validate platform early
-case "$OSTYPE" in
-  darwin*|linux-gnu*|msys*|cygwin*|win32*) ;;
+case "${OSTYPE:-}" in
   linux-andro*)
-    echo "[!] Android detected. Tool-X is designed for Linux (Ubuntu/Debian), macOS, or Windows."
-    echo "[!] Please use a full Linux distribution like Ubuntu or Debian."
-    exit 1
+    echo "Termux/Android detected."
+    for m in common termux_base languages devtools toolx_cli; do download_module "$m"; done
+    source "${SCRIPT_DIR}/common.sh"
+    source "${SCRIPT_DIR}/termux_base.sh"
+    source "${SCRIPT_DIR}/languages.sh"
+    source "${SCRIPT_DIR}/devtools.sh"
+    source "${SCRIPT_DIR}/toolx_cli.sh"
+    install_base
+    install_languages
+    install_devtools
+    install_toolx_cli
     ;;
-  *)
-    echo "[!] Unsupported platform: $OSTYPE"
-    echo "[!] Supported platforms: Linux (Ubuntu/Debian), macOS, Windows"
-    exit 1
+  darwin*)
+    for m in common macos_base languages devtools security cloud devops ai web3 toolx_cli; do download_module "$m"; done
+    source "${SCRIPT_DIR}/common.sh"
+    source "${SCRIPT_DIR}/macos_base.sh"
+    source "${SCRIPT_DIR}/languages.sh"
+    source "${SCRIPT_DIR}/devtools.sh"
+    source "${SCRIPT_DIR}/security.sh"
+    source "${SCRIPT_DIR}/cloud.sh"
+    source "${SCRIPT_DIR}/devops.sh"
+    source "${SCRIPT_DIR}/ai.sh"
+    source "${SCRIPT_DIR}/web3.sh"
+    source "${SCRIPT_DIR}/toolx_cli.sh"
+    install_base; install_languages; install_devtools; install_security
+    install_cloud; install_devops; install_ai; install_web3; install_toolx_cli
     ;;
+  linux-gnu*)
+    if ! grep -Eq 'Ubuntu|Debian' /etc/os-release 2>/dev/null; then
+      echo "[!] This installer targets Ubuntu/Debian for generic Linux."
+      echo "[!] Detected: $(grep '^NAME=' /etc/os-release 2>/dev/null || echo 'Unknown')"
+      exit 1
+    fi
+    for m in common linux_base languages devtools security cloud devops ai web3 toolx_cli; do download_module "$m"; done
+    source "${SCRIPT_DIR}/common.sh"
+    source "${SCRIPT_DIR}/linux_base.sh"
+    source "${SCRIPT_DIR}/languages.sh"
+    source "${SCRIPT_DIR}/devtools.sh"
+    source "${SCRIPT_DIR}/security.sh"
+    source "${SCRIPT_DIR}/cloud.sh"
+    source "${SCRIPT_DIR}/devops.sh"
+    source "${SCRIPT_DIR}/ai.sh"
+    source "${SCRIPT_DIR}/web3.sh"
+    source "${SCRIPT_DIR}/toolx_cli.sh"
+    install_base; install_languages; install_devtools; install_security
+    install_cloud; install_devops; install_ai; install_web3; install_toolx_cli
+    ;;
+  msys*|cygwin*|win32*)
+    for m in common windows_base languages devtools security cloud devops ai web3 toolx_cli; do download_module "$m"; done
+    source "${SCRIPT_DIR}/common.sh"
+    source "${SCRIPT_DIR}/windows_base.sh"
+    source "${SCRIPT_DIR}/languages.sh"
+    source "${SCRIPT_DIR}/devtools.sh"
+    source "${SCRIPT_DIR}/security.sh"
+    source "${SCRIPT_DIR}/cloud.sh"
+    source "${SCRIPT_DIR}/devops.sh"
+    source "${SCRIPT_DIR}/ai.sh"
+    source "${SCRIPT_DIR}/web3.sh"
+    source "${SCRIPT_DIR}/toolx_cli.sh"
+    install_base; install_languages; install_devtools; install_security
+    install_cloud; install_devops; install_ai; install_web3; install_toolx_cli
+    ;;
+  *) echo "[!] Unsupported platform: ${OSTYPE:-unknown}"; exit 1 ;;
 esac
 
-echo "Downloading modules..."
-
-download_module "common"
-download_module "languages"
-download_module "devtools"
-download_module "security"
-download_module "cloud"
-download_module "devops"
-download_module "ai"
-download_module "web3"
-download_module "toolx_cli"
-
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  download_module "macos_base"
-  source "${SCRIPT_DIR}/common.sh"
-  source "${SCRIPT_DIR}/macos_base.sh"
-  source "${SCRIPT_DIR}/languages.sh"
-  source "${SCRIPT_DIR}/devtools.sh"
-  source "${SCRIPT_DIR}/security.sh"
-  source "${SCRIPT_DIR}/cloud.sh"
-  source "${SCRIPT_DIR}/devops.sh"
-  source "${SCRIPT_DIR}/ai.sh"
-  source "${SCRIPT_DIR}/web3.sh"
-  source "${SCRIPT_DIR}/toolx_cli.sh"
-
-  install_base
-  install_languages
-  install_devtools
-  install_security
-  install_cloud
-  install_devops
-  install_ai
-  install_web3
-  install_toolx_cli
-
-elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-  if ! grep -Eq 'Ubuntu|Debian' /etc/os-release 2>/dev/null; then
-    echo "[!] This version is written for Ubuntu/Debian Linux."
-    echo "[!] Detected: $(grep '^NAME=' /etc/os-release 2>/dev/null || echo 'Unknown')"
-    exit 1
-  fi
-
-  download_module "linux_base"
-  source "${SCRIPT_DIR}/common.sh"
-  source "${SCRIPT_DIR}/linux_base.sh"
-  source "${SCRIPT_DIR}/languages.sh"
-  source "${SCRIPT_DIR}/devtools.sh"
-  source "${SCRIPT_DIR}/security.sh"
-  source "${SCRIPT_DIR}/cloud.sh"
-  source "${SCRIPT_DIR}/devops.sh"
-  source "${SCRIPT_DIR}/ai.sh"
-  source "${SCRIPT_DIR}/web3.sh"
-  source "${SCRIPT_DIR}/toolx_cli.sh"
-
-  install_base
-  install_languages
-  install_devtools
-  install_security
-  install_cloud
-  install_devops
-  install_ai
-  install_web3
-  install_toolx_cli
-
-elif [[ "$OSTYPE" == "msys"* || "$OSTYPE" == "cygwin"* || "$OSTYPE" == "win32"* ]]; then
-  download_module "windows_base"
-  source "${SCRIPT_DIR}/common.sh"
-  source "${SCRIPT_DIR}/windows_base.sh"
-  source "${SCRIPT_DIR}/languages.sh"
-  source "${SCRIPT_DIR}/devtools.sh"
-  source "${SCRIPT_DIR}/security.sh"
-  source "${SCRIPT_DIR}/cloud.sh"
-  source "${SCRIPT_DIR}/devops.sh"
-  source "${SCRIPT_DIR}/ai.sh"
-  source "${SCRIPT_DIR}/web3.sh"
-  source "${SCRIPT_DIR}/toolx_cli.sh"
-
-  install_base
-  install_languages
-  install_devtools
-  install_security
-  install_cloud
-  install_devops
-  install_ai
-  install_web3
-  install_toolx_cli
-
-fi
-
-echo ""
+echo
 echo "[✓] Tool-X installation complete."
 echo "[✓] Run: toolx help"
-echo ""
+echo
