@@ -95,18 +95,24 @@ LAUNCHER
 
   chmod +x "$TOOL_X_BIN/toolx"
 
-  # Termux already keeps $PREFIX/bin on PATH. Install a stable launcher there
-  # so `toolx` works immediately in the current shell and after reopening Termux.
-  if [[ "${OSTYPE:-}" == linux-andro* && -n "${PREFIX:-}" && -d "$PREFIX/bin" ]]; then
-    ln -sf "$TOOL_X_BIN/toolx" "$PREFIX/bin/toolx"
-    chmod +x "$PREFIX/bin/toolx"
+  # Termux: put a stable launcher in the same bin directory as Termux's
+  # existing executables. Do not depend on OSTYPE/PREFIX being exported by
+  # the shell that invoked the installer.
+  local termux_bin=""
+  if command -v bash >/dev/null 2>&1; then
+    termux_bin="$(dirname "$(command -v bash)")"
+  elif [[ -n "${PREFIX:-}" && -d "$PREFIX/bin" ]]; then
+    termux_bin="$PREFIX/bin"
+  fi
+
+  if [[ -n "$termux_bin" && -d "$termux_bin" && -w "$termux_bin" ]]; then
+    ln -sf "$TOOL_X_BIN/toolx" "$termux_bin/toolx"
+    chmod +x "$termux_bin/toolx"
+    print_success "Termux launcher linked: $termux_bin/toolx"
   fi
 
   ensure_path_entry "$TOOL_X_BIN"
   export PATH="$TOOL_X_BIN:$PATH"
 
   print_success "Launcher installed: $TOOL_X_BIN/toolx"
-  if [[ "${OSTYPE:-}" == linux-andro* ]]; then
-    print_success "Termux launcher linked: $PREFIX/bin/toolx"
-  fi
 }
