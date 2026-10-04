@@ -89,10 +89,178 @@ def sync_catalog(force=False):
         print(f"Catalog refresh failed: {exc}")
         return False
 
+CUSTOM_CATALOG = {
+    "toolx-git": {
+        "name": "Git",
+        "desc": "Distributed version control for source code.",
+        "url": "https://git-scm.com/",
+        "category": ["Tool-X Originals", "Base tools", "Developer tools"],
+        "dependency": [],
+        "package_manager": "system"
+    },
+    "toolx-curl": {
+        "name": "cURL",
+        "desc": "Command-line HTTP and data transfer utility.",
+        "url": "https://curl.se/",
+        "category": ["Tool-X Originals", "Base tools", "Cloud tools"],
+        "dependency": [],
+        "package_manager": "system"
+    },
+    "toolx-wget": {
+        "name": "Wget",
+        "desc": "Command-line network downloader.",
+        "url": "https://www.gnu.org/software/wget/",
+        "category": ["Tool-X Originals", "Base tools", "Cloud tools"],
+        "dependency": [],
+        "package_manager": "system"
+    },
+    "toolx-openssh": {
+        "name": "OpenSSH",
+        "desc": "Secure remote login and file-transfer client/server suite.",
+        "url": "https://www.openssh.com/",
+        "category": ["Tool-X Originals", "Base tools", "Cloud tools", "DevOps"],
+        "dependency": [],
+        "package_manager": "system"
+    },
+    "toolx-python": {
+        "name": "Python",
+        "desc": "Python programming language runtime.",
+        "url": "https://www.python.org/",
+        "category": ["Tool-X Originals", "Developer tools", "Programming languages", "AI/ML"],
+        "dependency": [],
+        "package_manager": "system"
+    },
+    "toolx-nodejs": {
+        "name": "Node.js",
+        "desc": "JavaScript runtime for server-side and tooling workloads.",
+        "url": "https://nodejs.org/",
+        "category": ["Tool-X Originals", "Developer tools", "Programming languages", "Web3"],
+        "dependency": [],
+        "package_manager": "system"
+    },
+    "toolx-clang": {
+        "name": "Clang",
+        "desc": "C/C++ compiler toolchain.",
+        "url": "https://clang.llvm.org/",
+        "category": ["Tool-X Originals", "Developer tools", "Programming languages"],
+        "dependency": [],
+        "package_manager": "system"
+    },
+    "toolx-gcc": {
+        "name": "GCC",
+        "desc": "GNU compiler collection for compiled languages.",
+        "url": "https://gcc.gnu.org/",
+        "category": ["Tool-X Originals", "Developer tools", "Programming languages"],
+        "dependency": [],
+        "package_manager": "system"
+    },
+    "toolx-cmake": {
+        "name": "CMake",
+        "desc": "Cross-platform build configuration and generation system.",
+        "url": "https://cmake.org/",
+        "category": ["Tool-X Originals", "Developer tools", "DevOps"],
+        "dependency": [],
+        "package_manager": "system"
+    },
+    "toolx-gdb": {
+        "name": "GDB",
+        "desc": "GNU debugger for inspecting and debugging programs.",
+        "url": "https://www.sourceware.org/gdb/",
+        "category": ["Tool-X Originals", "Developer tools"],
+        "dependency": [],
+        "package_manager": "system"
+    },
+    "toolx-sqlite": {
+        "name": "SQLite",
+        "desc": "Lightweight embedded SQL database engine and CLI.",
+        "url": "https://www.sqlite.org/",
+        "category": ["Tool-X Originals", "Databases"],
+        "dependency": [],
+        "package_manager": "system"
+    },
+    "toolx-rsync": {
+        "name": "Rsync",
+        "desc": "Efficient file synchronization and transfer utility.",
+        "url": "https://rsync.samba.org/",
+        "category": ["Tool-X Originals", "Cloud tools", "DevOps"],
+        "dependency": [],
+        "package_manager": "system"
+    },
+    "toolx-rclone": {
+        "name": "Rclone",
+        "desc": "Command-line file synchronization and cloud-storage utility.",
+        "url": "https://rclone.org/",
+        "category": ["Tool-X Originals", "Cloud tools"],
+        "dependency": [],
+        "package_manager": "system"
+    },
+    "toolx-jq": {
+        "name": "JQ",
+        "desc": "Command-line JSON processor.",
+        "url": "https://jqlang.org/",
+        "category": ["Tool-X Originals", "Utilities", "Cloud tools"],
+        "dependency": [],
+        "package_manager": "system"
+    },
+    "toolx-tmux": {
+        "name": "Tmux",
+        "desc": "Terminal multiplexer for persistent shell sessions.",
+        "url": "https://github.com/tmux/tmux",
+        "category": ["Tool-X Originals", "Utilities", "DevOps"],
+        "dependency": [],
+        "package_manager": "system"
+    },
+    "toolx-nano": {
+        "name": "Nano",
+        "desc": "Small command-line text editor.",
+        "url": "https://www.nano-editor.org/",
+        "category": ["Tool-X Originals", "Utilities"],
+        "dependency": [],
+        "package_manager": "system"
+    },
+    "toolx-vim": {
+        "name": "Vim",
+        "desc": "Configurable command-line text editor.",
+        "url": "https://www.vim.org/",
+        "category": ["Tool-X Originals", "Utilities"],
+        "dependency": [],
+        "package_manager": "system"
+    },
+    "toolx-tree": {
+        "name": "Tree",
+        "desc": "Displays directory structures as a tree.",
+        "url": "https://oldmanprogrammer.net/source.php?dir=projects/tree",
+        "category": ["Tool-X Originals", "Utilities"],
+        "dependency": [],
+        "package_manager": "system"
+    },
+    "toolx-openssl": {
+        "name": "OpenSSL",
+        "desc": "Cryptographic toolkit and TLS/SSL command-line utilities.",
+        "url": "https://www.openssl.org/",
+        "category": ["Tool-X Originals", "Security tools"],
+        "dependency": [],
+        "package_manager": "system"
+    },
+    "toolx-gnupg": {
+        "name": "GnuPG",
+        "desc": "Open-source implementation of the OpenPGP standard.",
+        "url": "https://gnupg.org/",
+        "category": ["Tool-X Originals", "Security tools"],
+        "dependency": [],
+        "package_manager": "system"
+    }
+}
+
 def load_catalog():
     if not sync_catalog():
-        return {}
-    return load_json(CATALOG_FILE, {})
+        upstream = {}
+    else:
+        upstream = load_json(CATALOG_FILE, {})
+    # Keep Tool-X's own curated tools in the same catalog as the upstream database.
+    merged = dict(upstream)
+    merged.update(CUSTOM_CATALOG)
+    return merged
 
 def normalize_category(value):
     return str(value or "uncategorized").strip() or "uncategorized"
@@ -176,6 +344,36 @@ def install_tool(key, info):
     destination = os.path.join(TOOL_X_HOME, "tools", safe_name)
     os.makedirs(os.path.dirname(destination), exist_ok=True)
 
+    if manager == "system":
+        print(f"Use your platform package manager to install {name}.")
+        print("Tool-X keeps this entry visible and reports whether its command is already available.")
+        if tool_command_available(info):
+            print(f"Already available: {name}")
+            return True
+        manager_name = get_package_manager()
+        if not manager_name:
+            return False
+        package_name = str(info.get("name", key)).split()[0]
+        if manager_name == "pkg":
+            cmd = ["pkg", "install", "-y", package_name.lower()]
+        elif manager_name in {"apt", "apt-get"}:
+            cmd = [manager_name, "install", "-y", package_name.lower()]
+        elif manager_name == "pacman":
+            cmd = ["pacman", "-S", "--noconfirm", package_name.lower()]
+        elif manager_name == "dnf":
+            cmd = ["dnf", "install", "-y", package_name.lower()]
+        else:
+            cmd = ["brew", "install", package_name.lower()]
+        print("Running:", " ".join(cmd))
+        result = subprocess.run(cmd, check=False)
+        if result.returncode == 0:
+            installed = load_json(INSTALLED_FILE, {})
+            installed[key] = {"name": name, "path": "", "url": url, "package_manager": manager_name}
+            save_json(INSTALLED_FILE, installed)
+            print(f"Installed: {name}")
+            return True
+        print(f"Installation failed for {name}.")
+        return False
     if manager == "git":
         if os.path.isdir(os.path.join(destination, ".git")):
             cmd = ["git", "-C", destination, "pull", "--ff-only"]
