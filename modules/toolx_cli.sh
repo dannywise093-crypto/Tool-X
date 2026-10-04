@@ -1,29 +1,102 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-print_success() {
-  echo "[✓] $1"
-}
+install_toolx_cli() {
+  print_info "Installing toolx launcher"
 
-print_info() {
-  echo "[*] $1"
-}
+  mkdir -p "$TOOL_X_BIN"
 
-run_quiet() {
-  "$@" >/dev/null 2>&1
-}
+  cat > "$TOOL_X_BIN/toolx" <<'LAUNCHER'
+#!/usr/bin/env python3
+import os
+import sys
 
-has_cmd() {
-  command -v "$1" >/dev/null 2>&1
-}
+TOOL_X_HOME = os.path.expanduser("~/.tool-x")
 
-ensure_path_entry() {
-  local entry="$1"
-  if ! grep -Fq "$entry" "$HOME/.bashrc" 2>/dev/null; then
-    echo "export PATH=\"$entry:\$PATH\"" >> "$HOME/.bashrc"
-  fi
-}
+HELP_TEXT = """
+Tool-X
 
-log_step() {
-  echo "[$(date +%H:%M:%S)] $1" >> "${TOOL_X_LOGS:-$HOME/.tool-x/logs}/toolx.log"
+Commands:
+  help          Show this screen
+  status        Show installation status
+  languages     Show language runtimes
+  tools         Show tool categories
+  doctor        Show installation health
+  install       Install the default environment
+"""
+
+def status():
+    print(f"Tool-X Home: {TOOL_X_HOME}")
+    if os.path.isdir(TOOL_X_HOME):
+        print("Installed")
+    else:
+        print("Not installed")
+
+
+def doctor():
+    print("Tool-X environment check")
+    print("- home:", TOOL_X_HOME)
+    if os.path.isdir(TOOL_X_HOME):
+        print("- status: installed")
+    else:
+        print("- status: not installed")
+
+
+def languages():
+    print("C, C++, C#, Java, Python, JavaScript, TypeScript, Go, Rust, Ruby, PHP, Kotlin, Bash, PowerShell, SQL")
+
+
+def tools():
+    print("Base tools, developer tools, security tools, cloud tools, DevOps, AI/ML, Web3, databases, utilities")
+
+
+def install():
+    print("Use the installer for the full environment bootstrap.")
+    print("Example: bash <(curl -s https://raw.githubusercontent.com/dannywise093-crypto/Tool-X/main/setup.sh)")
+
+
+def main():
+    if len(sys.argv) < 2:
+        print(HELP_TEXT)
+        return 0
+
+    command = sys.argv[1].lower()
+
+    if command in {"help", "--help", "-h"}:
+        print(HELP_TEXT)
+        return 0
+
+    if command == "status":
+        status()
+        return 0
+
+    if command == "doctor":
+        doctor()
+        return 0
+
+    if command == "languages":
+        languages()
+        return 0
+
+    if command == "tools":
+        tools()
+        return 0
+
+    if command == "install":
+        install()
+        return 0
+
+    print(f"Unknown command: {command}")
+    return 1
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+LAUNCHER
+
+  chmod +x "$TOOL_X_BIN/toolx"
+
+  ensure_path_entry "$TOOL_X_BIN"
+  export PATH="$TOOL_X_BIN:$PATH"
+
+  print_success "Launcher installed: $TOOL_X_BIN/toolx"
 }
