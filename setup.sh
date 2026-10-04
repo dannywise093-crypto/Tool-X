@@ -1,98 +1,50 @@
-#!/usr/bin/env bash
-set -euo pipefail
+# Tool-X Release Notes
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+## Version
 
-export TOOL_X_HOME="${HOME}/.tool-x"
-export TOOL_X_BIN="${TOOL_X_HOME}/bin"
-export TOOL_X_TOOLS="${TOOL_X_HOME}/tools"
-export TOOL_X_LOGS="${TOOL_X_HOME}/logs"
-export TOOL_X_CACHE="${TOOL_X_HOME}/cache"
+1.0.0
 
-mkdir -p "$TOOL_X_HOME" "$TOOL_X_BIN" "$TOOL_X_TOOLS" "$TOOL_X_LOGS" "$TOOL_X_CACHE"
+## Summary
 
-echo ""
-echo "Tool-X Multi-Platform Installer"
-echo "=============================="
-echo ""
+Tool-X is a multi-platform developer environment installer intended to bootstrap a usable engineering machine with a practical software stack.
 
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  source "$SCRIPT_DIR/modules/common.sh"
-  source "$SCRIPT_DIR/modules/macos_base.sh"
-  source "$SCRIPT_DIR/modules/languages.sh"
-  source "$SCRIPT_DIR/modules/devtools.sh"
-  source "$SCRIPT_DIR/modules/security.sh"
-  source "$SCRIPT_DIR/modules/cloud.sh"
-  source "$SCRIPT_DIR/modules/devops.sh"
-  source "$SCRIPT_DIR/modules/ai.sh"
-  source "$SCRIPT_DIR/modules/web3.sh"
-  source "$SCRIPT_DIR/modules/toolx_cli.sh"
+## Included categories
 
-  install_base
-  install_languages
-  install_devtools
-  install_security
-  install_cloud
-  install_devops
-  install_ai
-  install_web3
-  install_toolx_cli
+- base system setup
+- language runtimes
+- developer tooling
+- security tooling
+- cloud tooling
+- DevOps tooling
+- AI/ML tooling
+- Web3 tooling
+- unified launcher
 
-elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-  if ! grep -Eq 'Ubuntu|Debian' /etc/os-release 2>/dev/null; then
-    echo "[!] This version is written for Ubuntu/Debian Linux."
-    exit 1
-  fi
+## Supported platforms
 
-  source "$SCRIPT_DIR/modules/common.sh"
-  source "$SCRIPT_DIR/modules/linux_base.sh"
-  source "$SCRIPT_DIR/modules/languages.sh"
-  source "$SCRIPT_DIR/modules/devtools.sh"
-  source "$SCRIPT_DIR/modules/security.sh"
-  source "$SCRIPT_DIR/modules/cloud.sh"
-  source "$SCRIPT_DIR/modules/devops.sh"
-  source "$SCRIPT_DIR/modules/ai.sh"
-  source "$SCRIPT_DIR/modules/web3.sh"
-  source "$SCRIPT_DIR/modules/toolx_cli.sh"
+- Ubuntu / Debian Linux
+- macOS
+- Windows
 
-  install_base
-  install_languages
-  install_devtools
-  install_security
-  install_cloud
-  install_devops
-  install_ai
-  install_web3
-  install_toolx_cli
+## Notes
 
-elif [[ "$OSTYPE" == "msys"* || "$OSTYPE" == "cygwin"* || "$OSTYPE" == "win32"* ]]; then
-  source "$SCRIPT_DIR/modules/common.sh"
-  source "$SCRIPT_DIR/modules/windows_base.sh"
-  source "$SCRIPT_DIR/modules/languages.sh"
-  source "$SCRIPT_DIR/modules/devtools.sh"
-  source "$SCRIPT_DIR/modules/security.sh"
-  source "$SCRIPT_DIR/modules/cloud.sh"
-  source "$SCRIPT_DIR/modules/devops.sh"
-  source "$SCRIPT_DIR/modules/ai.sh"
-  source "$SCRIPT_DIR/modules/web3.sh"
-  source "$SCRIPT_DIR/modules/toolx_cli.sh"
+This release focuses on a clean, modular installer architecture and a Linux-first installation strategy. macOS and Windows support are included as optional modules, but Linux remains the most reliable target.
 
-  install_base
-  install_languages
-  install_devtools
-  install_security
-  install_cloud
-  install_devops
-  install_ai
-  install_web3
-  install_toolx_cli
+## Use
 
-else
-  echo "[!] Unsupported platform: ${OSTYPE}"
-  exit 1
-fi
+```bash
+git clone https://github.com/dannywise093-crypto/Tool-X.git
+cd Tool-X
+chmod +x setup.sh
+./setup.sh
+```
 
-echo ""
-echo "[✓] Tool-X installation complete."
-echo "[✓] Run: toolx help"
-echo ""
+## Post-install
+
+```bash
+toolx help
+```
+
+## Intent
+
+The purpose of Tool-X is to make it simpler to stand up a real development environment without manually installing each component one by one.

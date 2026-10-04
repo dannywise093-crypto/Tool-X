@@ -1,3 +1,15 @@
-*.log
-__pycache__/
-venv/
+#!/usr/bin/env bash
+set -euo pipefail
+
+install_toolx_cli() {
+  print_info "Installing toolx launcher"
+
+  mkdir -p "$TOOL_X_BIN"
+  cp "$SCRIPT_DIR/tool-x.py" "$TOOL_X_BIN/toolx"
+  chmod +x "$TOOL_X_BIN/toolx"
+
+  ensure_path_entry "$TOOL_X_BIN"
+  export PATH="$TOOL_X_BIN:$PATH"
+
+  print_success "Launcher installed: $TOOL_X_BIN/toolx"
+}

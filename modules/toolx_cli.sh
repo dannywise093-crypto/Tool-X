@@ -1,19 +1,29 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-install_toolx_cli() {
-  mkdir -p "${TOOL_X_BIN}"
+print_success() {
+  echo "[✓] $1"
+}
 
-  cat > "${TOOL_X_BIN}/toolx" <<'EOF'
-#!/usr/bin/env bash
-python3 "$HOME/.tool-x/tool-x.py" "$@"
-EOF
+print_info() {
+  echo "[*] $1"
+}
 
-  chmod +x "${TOOL_X_BIN}/toolx"
+run_quiet() {
+  "$@" >/dev/null 2>&1
+}
 
-  if ! grep -q '.tool-x/bin' "$HOME/.bashrc" 2>/dev/null; then
-    echo 'export PATH="$HOME/.tool-x/bin:$PATH"' >> "$HOME/.bashrc"
+has_cmd() {
+  command -v "$1" >/dev/null 2>&1
+}
+
+ensure_path_entry() {
+  local entry="$1"
+  if ! grep -Fq "$entry" "$HOME/.bashrc" 2>/dev/null; then
+    echo "export PATH=\"$entry:\$PATH\"" >> "$HOME/.bashrc"
   fi
+}
 
-  print_success "Global command installed: toolx"
+log_step() {
+  echo "[$(date +%H:%M:%S)] $1" >> "${TOOL_X_LOGS:-$HOME/.tool-x/logs}/toolx.log"
 }

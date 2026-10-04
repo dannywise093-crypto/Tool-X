@@ -1,18 +1,84 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/usr/bin/env python3
+import os
+import sys
 
-print_success() {
-  echo "[✓] $1"
-}
+TOOL_X_HOME = os.path.expanduser("~/.tool-x")
 
-print_info() {
-  echo "[*] $1"
-}
+HELP_TEXT = """
+Tool-X
 
-run_quiet() {
-  "$@" >/dev/null 2>&1
-}
+Commands:
+  help          Show this screen
+  status        Show installation status
+  languages     Show language runtimes
+  tools         Show tool categories
+  doctor        Show installation health
+  install       Install the default environment
+"""
 
-has_cmd() {
-  command -v "$1" >/dev/null 2>&1
-}
+def status():
+    print(f"Tool-X Home: {TOOL_X_HOME}")
+    if os.path.isdir(TOOL_X_HOME):
+        print("Installed")
+    else:
+        print("Not installed")
+
+
+def doctor():
+    print("Tool-X environment check")
+    print("- home:", TOOL_X_HOME)
+    if os.path.isdir(TOOL_X_HOME):
+        print("- status: installed")
+    else:
+        print("- status: not installed")
+
+
+def languages():
+    print("C, C++, C#, Java, Python, JavaScript, TypeScript, Go, Rust, Ruby, PHP, Kotlin, Bash, PowerShell, SQL")
+
+
+def tools():
+    print("Base tools, developer tools, security tools, cloud tools, DevOps, AI/ML, Web3, databases, utilities")
+
+
+def install():
+    print("Use the setup.sh installer for the full environment bootstrap.")
+    print("Example: ./setup.sh")
+
+
+def main():
+    if len(sys.argv) < 2:
+        print(HELP_TEXT)
+        return 0
+
+    command = sys.argv[1].lower()
+
+    if command in {"help", "--help", "-h"}:
+        print(HELP_TEXT)
+        return 0
+
+    if command == "status":
+        status()
+        return 0
+
+    if command == "doctor":
+        doctor()
+        return 0
+
+    if command == "languages":
+        languages()
+        return 0
+
+    if command == "tools":
+        tools()
+        return 0
+
+    if command == "install":
+        install()
+        return 0
+
+    print(f"Unknown command: {command}")
+    return 1
+
+if __name__ == "__main__":
+    raise SystemExit(main())
