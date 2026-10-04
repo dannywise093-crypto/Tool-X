@@ -1,20 +1,17 @@
 #!/bin/bash
 ################################################################################
-# Tool-X v4.0 - Ultimate Multi-Purpose Security & DevOps Toolkit
-# Author: Danny Wise (Enhanced Edition)
+# Tool-X v5.0 - Universal Multi-Platform Toolkit Installer
+# Author: Danny Wise
 # Date: 2026-10-04
-# 
+#
 # Features:
-# - Kali Linux + Security Tools
-# - Cloud Platforms (AWS, GCP, Azure)
-# - DevOps (Docker, Kubernetes, Terraform, Ansible)
-# - Development (Python, Node, Go, Rust, Ruby, Java)
-# - Databases (PostgreSQL, MySQL, MongoDB, Redis, Cassandra)
-# - Forensics & Reverse Engineering
-# - Wireless & Network Analysis
-# - Web Security & Exploitation
-# - AI/ML Tools
-# - Blockchain & Web3
+# - Auto-detect platform and install platform-specific tools
+# - Windows: VSCode + Git + DevTools
+# - Android (Termux): Micro editor + Security tools
+# - iOS (iSH): Alpine-compatible tools
+# - Linux/macOS: Full ecosystem
+# - Kali Linux tools, Cloud, DevOps, AI/ML, Web3
+# - One command, everything installed automatically
 ################################################################################
 
 set -o pipefail
@@ -26,7 +23,8 @@ TOOL_X_TOOLS="${TOOL_X_HOME}/tools"
 TOOL_X_MODULES="${TOOL_X_HOME}/modules"
 TOOL_X_CONFIG="${TOOL_X_HOME}/config"
 TOOL_X_LOGS="${TOOL_X_HOME}/logs"
-LOG_FILE="${TOOL_X_LOGS}/setup-$(date +%s).log"
+TOOL_X_CACHE="${TOOL_X_HOME}/cache"
+LOG_FILE="${TOOL_X_LOGS}/install-$(date +%Y%m%d_%H%M%S).log"
 REPO_URL="https://github.com/dannywise093-crypto/Tool-X"
 
 # === COLORS ===
@@ -48,30 +46,23 @@ INSTALLED=0
 FAILED=0
 SKIPPED=0
 
-# === FUNCTIONS ===
+# === PLATFORM DETECTION ===
+PLATFORM=""
+OS_TYPE=""
+PKG_MANAGER=""
+BIN_DIR=""
+IS_WINDOWS=false
+IS_ANDROID=false
+IS_IOS=false
+IS_LINUX=false
+IS_MACOS=false
+
+################################################################################
+# UTILITY FUNCTIONS
+################################################################################
 
 log() {
     echo -e "$1" | tee -a "$LOG_FILE"
-}
-
-log_only() {
-    echo "$1" >> "$LOG_FILE"
-}
-
-print_banner() {
-    clear
-    log "${CYAN}"
-    cat << "EOF"
-╔══════════════════════════════════════════════════════════════════╗
-║                                                                  ║
-║                  ${PURPLE}⚔️  TOOL-X v4.0 ULTIMATE  ⚔️${CYAN}                ║
-║          Next-Generation Multi-Purpose Security Toolkit          ║
-║                                                                  ║
-║  Kali | Cloud | DevOps | Development | Forensics | AI/ML | Web3 ║
-║                                                                  ║
-╚══════════════════════════════════════════════════════════════════╝
-EOF
-    log "${NC}"
 }
 
 log_status() {
@@ -93,25 +84,77 @@ log_error() {
     ((FAILED++))
 }
 
-# === OS Detection ===
-detect_os() {
-    log_status "Detecting OS and Package Manager..."
+print_banner() {
+    clear
+    log "${CYAN}"
+    cat << "EOF"
+╔══════════════════════════════════════════════════════════════════╗
+║                                                                  ║
+║                  ${PURPLE}⚔️  TOOL-X v5.0 MULTI-PLATFORM  ⚔️${CYAN}       ║
+║        Universal Toolkit for All Platforms & Devices            ║
+║                                                                  ║
+║  Windows | macOS | Linux | Kali | Android | iOS | Cloud | Web3  ║
+║                                                                  ║
+╚══════════════════════════════════════════════════════════════════╝
+EOF
+    log "${NC}"
+}
+
+################################################################################
+# PLATFORM DETECTION
+################################################################################
+
+detect_platform() {
+    log_status "Detecting platform and device type..."
     
+    # Check for Android/Termux
     if [ -d "$PREFIX" ] && grep -q "com.termux" "$PREFIX/etc/bash.bashrc" 2>/dev/null; then
-        OS_TYPE="termux"
+        PLATFORM="termux"
+        OS_TYPE="android"
         PKG_MANAGER="pkg"
         BIN_DIR="$PREFIX/bin"
-        log_success "Termux (Android) detected"
-        
-    elif [[ "$OSTYPE" == "darwin"* ]]; then
+        IS_ANDROID=true
+        log_success "Android (Termux) detected"
+        return
+    fi
+    
+    # Check for iOS (iSH)
+    if [ -f /etc/os-release ] && grep -q "iSH" /etc/os-release 2>/dev/null; then
+        PLATFORM="ish"
+        OS_TYPE="ios"
+        PKG_MANAGER="apk"
+        BIN_DIR="/usr/local/bin"
+        IS_IOS=true
+        log_success "iOS (iSH) detected"
+        return
+    fi
+    
+    # Check for Windows (Git Bash/MSYS2/WSL)
+    if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "win32" ]]; then
+        PLATFORM="windows"
+        OS_TYPE="windows"
+        IS_WINDOWS=true
+        log_success "Windows detected"
+        return
+    fi
+    
+    # Check for macOS
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        PLATFORM="macos"
         OS_TYPE="macos"
         PKG_MANAGER="brew"
         BIN_DIR="/usr/local/bin"
+        IS_MACOS=true
         log_success "macOS (Homebrew) detected"
-        
-    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        return
+    fi
+    
+    # Check for Linux distributions
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        PLATFORM="linux"
         OS_TYPE="linux"
         BIN_DIR="/usr/local/bin"
+        IS_LINUX=true
         
         if command -v apt-get &>/dev/null; then
             PKG_MANAGER="apt"
@@ -125,22 +168,34 @@ detect_os() {
         elif command -v yum &>/dev/null; then
             PKG_MANAGER="yum"
             log_success "Legacy RedHat detected"
+        elif command -v apk &>/dev/null; then
+            PKG_MANAGER="apk"
+            log_success "Alpine detected"
         else
             PKG_MANAGER="unknown"
             log_warning "Unknown Linux distro"
         fi
-    else
-        log_error "Unsupported OS: $OSTYPE"
-        exit 1
+        return
     fi
+    
+    log_error "Unknown platform: $OSTYPE"
+    exit 1
 }
 
-# === Package Installation ===
+################################################################################
+# ENVIRONMENT INITIALIZATION
+################################################################################
+
+init_environment() {
+    log_status "Initializing Tool-X environment..."
+    mkdir -p "$TOOL_X_HOME"/{bin,tools,modules,config,logs,cache,data,scripts}
+    log_success "Directory structure created"
+}
+
 install_package() {
     local pkg=$1
     local alt_name=$2
     
-    # Check if already installed
     if command -v "$pkg" &>/dev/null || command -v "$alt_name" &>/dev/null 2>&1; then
         log_success "$pkg (already installed)"
         return 0
@@ -167,20 +222,155 @@ install_package() {
         pkg)
             pkg install "$pkg" -y 2>/dev/null && log_success "$pkg" || log_warning "$pkg"
             ;;
+        apk)
+            sudo apk add "$pkg" 2>/dev/null && log_success "$pkg" || log_warning "$pkg"
+            ;;
         *)
             log_warning "$pkg (unsupported pkg manager)"
             ;;
     esac
 }
 
-# === Initialize Environment ===
-init_environment() {
-    log_status "Initializing Tool-X environment..."
-    mkdir -p "$TOOL_X_HOME"/{bin,tools,modules,config,logs,data,scripts}
-    log_success "Directory structure created"
+################################################################################
+# PLATFORM-SPECIFIC INSTALLERS
+################################################################################
+
+# === WINDOWS SPECIFIC ===
+install_windows_tools() {
+    log_status "Installing Windows-specific tools..."
+    
+    # VSCode
+    if ! command -v code &>/dev/null; then
+        log_status "Installing Visual Studio Code..."
+        
+        # Check if Windows
+        if [[ "$OS" == "Windows_NT" ]] || [[ "$OSTYPE" == "msys" ]]; then
+            # Use scoop or chocolatey if available
+            if command -v choco &>/dev/null; then
+                choco install vscode -y 2>/dev/null && log_success "VSCode installed" || log_warning "VSCode"
+            elif command -v scoop &>/dev/null; then
+                scoop install vscode 2>/dev/null && log_success "VSCode installed" || log_warning "VSCode"
+            else
+                log_warning "VSCode - install from https://code.visualstudio.com"
+            fi
+        fi
+    else
+        log_success "VSCode (already installed)"
+    fi
+    
+    # Git
+    install_package "git"
+    
+    # Python
+    if ! command -v python &>/dev/null && ! command -v python3 &>/dev/null; then
+        log_warning "Python - install from https://www.python.org"
+    else
+        log_success "Python (already installed)"
+    fi
+    
+    # Node.js
+    if ! command -v node &>/dev/null; then
+        log_warning "Node.js - install from https://nodejs.org"
+    else
+        log_success "Node.js (already installed)"
+    fi
 }
 
-# === Update System ===
+# === ANDROID (TERMUX) SPECIFIC ===
+install_android_tools() {
+    log_status "Installing Android (Termux) specific tools..."
+    
+    # Update Termux
+    log_status "Updating Termux packages..."
+    pkg update -y 2>/dev/null || log_warning "pkg update"
+    
+    # Micro editor
+    if ! command -v micro &>/dev/null; then
+        log_status "Installing Micro text editor..."
+        pkg install micro -y 2>/dev/null && log_success "Micro" || log_warning "Micro"
+    else
+        log_success "Micro (already installed)"
+    fi
+    
+    # Core tools
+    local tools=(
+        "git" "curl" "wget" "python" "python-pip"
+        "openssh" "openssl" "vim" "nano" "jq"
+        "nmap" "hydra" "sqlmap" "metasploit"
+    )
+    
+    for tool in "${tools[@]}"; do
+        install_package "$tool"
+    done
+    
+    # Security tools for Android
+    log_status "Installing Android security toolkit..."
+    pkg install termux-api termux-tools -y 2>/dev/null || log_warning "Termux API tools"
+}
+
+# === iOS (iSH) SPECIFIC ===
+install_ios_tools() {
+    log_status "Installing iOS (iSH) specific tools..."
+    
+    # Update Alpine
+    log_status "Updating Alpine packages..."
+    sudo apk update 2>/dev/null || log_warning "apk update"
+    
+    # Micro editor
+    if ! command -v micro &>/dev/null; then
+        log_status "Installing Micro text editor..."
+        sudo apk add micro 2>/dev/null && log_success "Micro" || log_warning "Micro"
+    else
+        log_success "Micro (already installed)"
+    fi
+    
+    # Core tools (Alpine compatible)
+    local tools=(
+        "git" "curl" "wget" "python3" "py3-pip"
+        "openssh" "openssl" "vim" "nano" "jq"
+    )
+    
+    for tool in "${tools[@]}"; do
+        install_package "$tool"
+    done
+}
+
+# === LINUX/MACOS SPECIFIC ===
+install_linux_macos_tools() {
+    log_status "Installing Linux/macOS tools..."
+    
+    # VSCode for Linux/macOS
+    if ! command -v code &>/dev/null; then
+        log_status "Installing Visual Studio Code..."
+        
+        if [ "$OS_TYPE" = "linux" ]; then
+            curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg 2>/dev/null
+            sudo install -o root -g root -m 644 microsoft.gpg /etc/apt/trusted.gpg.d/ 2>/dev/null
+            sudo sh -c 'echo "deb [arch=amd64,arm64 signed-by=/etc/apt/trusted.gpg.d/microsoft.gpg] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list' 2>/dev/null
+            sudo apt-get update && sudo apt-get install -y code 2>/dev/null && log_success "VSCode" || log_warning "VSCode"
+        elif [ "$OS_TYPE" = "macos" ]; then
+            brew install --cask visual-studio-code 2>/dev/null && log_success "VSCode" || log_warning "VSCode"
+        fi
+    else
+        log_success "VSCode (already installed)"
+    fi
+    
+    # Core development tools
+    log_status "Installing core development tools..."
+    local core_tools=(
+        "git" "curl" "wget" "build-essential" "python3" "python3-pip"
+        "nodejs" "npm" "vim" "nano" "jq" "htop" "tmux"
+    )
+    
+    for tool in "${core_tools[@]}"; do
+        install_package "$tool"
+    done
+}
+
+################################################################################
+# UNIVERSAL TOOL INSTALLATION
+################################################################################
+
 update_system() {
     log_status "Updating package manager..."
     
@@ -203,59 +393,29 @@ update_system() {
         pkg)
             pkg update -y 2>/dev/null
             ;;
+        apk)
+            sudo apk update 2>/dev/null && sudo apk upgrade 2>/dev/null
+            ;;
     esac
     
     log_success "Package manager updated"
 }
 
-# === Install Core Dependencies ===
-install_core_dependencies() {
-    log_status "Installing core dependencies..."
-    
-    local deps=(
-        "git" "curl" "wget" "python3" "python3-pip" "build-essential"
-        "jq" "htop" "tmux" "vim" "nano" "net-tools" "openssh-client"
-    )
-    
-    for dep in "${deps[@]}"; do
-        install_package "$dep"
-    done
-}
-
-# === Install Kali Linux Tools ===
 install_kali_tools() {
     log_status "Installing Kali Linux Security Tools..."
     
+    # Skip on iOS/Android if minimal
+    if [ "$IS_IOS" = true ] || [ "$IS_ANDROID" = true ]; then
+        log_warning "Skipping full Kali suite on mobile platform"
+        return
+    fi
+    
     local tools=(
-        # Reconnaissance
-        "nmap" "masscan" "whois" "dnsmap" "dnsenum" "fierce" "theHarvester"
-        
-        # Scanning & Enumeration
-        "nikto" "gobuster" "dirbuster" "wpscan" "sqlmap" "zaproxy"
-        
-        # Exploitation
-        "metasploit-framework" "burpsuite" "hydra" "medusa"
-        
-        # Cryptography & Hashing
-        "john" "hashcat" "openssl" "gpg"
-        
-        # Network Analysis
-        "wireshark" "tshark" "tcpdump" "mitmproxy" "proxychains"
-        
-        # Wireless
-        "aircrack-ng" "reaver" "pixiewps"
-        
-        # Reverse Engineering
-        "ghidra" "radare2" "binwalk" "strings" "objdump"
-        
-        # Forensics
-        "exiftool" "steghide" "foremost" "sleuthkit"
-        
-        # Exploitation Frameworks
-        "exploitdb" "searchsploit" "commix"
-        
-        # Social Engineering
-        "social-engineer-toolkit"
+        "nmap" "masscan" "whois" "dnsmap" "dnsenum" "fierce"
+        "nikto" "gobuster" "sqlmap" "zaproxy"
+        "metasploit-framework" "burpsuite" "hydra" "john" "hashcat"
+        "wireshark" "tcpdump" "aircrack-ng"
+        "ghidra" "radare2" "binwalk" "exiftool"
     )
     
     for tool in "${tools[@]}"; do
@@ -263,11 +423,16 @@ install_kali_tools() {
     done
 }
 
-# === Install Cloud Tools ===
 install_cloud_tools() {
     log_status "Installing Cloud Platform Tools..."
     
-    # AWS CLI v2
+    # Skip on mobile platforms
+    if [ "$IS_ANDROID" = true ] || [ "$IS_IOS" = true ]; then
+        log_warning "Skipping cloud tools on mobile platform"
+        return
+    fi
+    
+    # AWS CLI
     if ! command -v aws &>/dev/null; then
         log_status "Installing AWS CLI v2..."
         curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/tmp/awscliv2.zip" 2>/dev/null
@@ -279,76 +444,33 @@ install_cloud_tools() {
     else
         log_success "AWS CLI (already installed)"
     fi
-    
-    # Google Cloud SDK
-    if ! command -v gcloud &>/dev/null && [ "$OS_TYPE" = "linux" ]; then
-        log_status "Installing Google Cloud SDK..."
-        echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | \
-        sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list 2>/dev/null
-        curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | \
-        sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - 2>/dev/null
-        sudo apt-get update && sudo apt-get install -y google-cloud-sdk 2>/dev/null && \
-        log_success "Google Cloud SDK" || log_warning "Google Cloud SDK"
-    else
-        log_success "Google Cloud SDK (already installed or skipped)"
-    fi
-    
-    # Azure CLI
-    if ! command -v az &>/dev/null && [ "$OS_TYPE" = "linux" ]; then
-        log_status "Installing Azure CLI..."
-        curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash 2>/dev/null && \
-        log_success "Azure CLI" || log_warning "Azure CLI"
-    else
-        log_success "Azure CLI (already installed or skipped)"
-    fi
-    
-    # DigitalOcean CLI
-    if ! command -v doctl &>/dev/null; then
-        log_status "Installing DigitalOcean CLI..."
-        cd /tmp
-        wget -q https://github.com/digitalocean/doctl/releases/download/v1.98.5/doctl-1.98.5-linux-amd64.tar.gz 2>/dev/null
-        if [ -f doctl-1.98.5-linux-amd64.tar.gz ]; then
-            tar xf doctl-1.98.5-linux-amd64.tar.gz 2>/dev/null
-            sudo mv doctl /usr/local/bin 2>/dev/null
-            rm -f doctl-1.98.5-linux-amd64.tar.gz
-            log_success "DigitalOcean CLI"
-        fi
-    else
-        log_success "DigitalOcean CLI (already installed)"
-    fi
 }
 
-# === Install DevOps Tools ===
 install_devops_tools() {
-    log_status "Installing DevOps & Infrastructure Tools..."
+    log_status "Installing DevOps Tools..."
+    
+    # Skip on mobile
+    if [ "$IS_ANDROID" = true ] || [ "$IS_IOS" = true ]; then
+        log_warning "Skipping DevOps tools on mobile platform"
+        return
+    fi
     
     # Docker
     if ! command -v docker &>/dev/null; then
         log_status "Installing Docker..."
-        if [ "$OS_TYPE" = "linux" ]; then
+        if [ "$IS_LINUX" = true ]; then
             curl -fsSL https://get.docker.com | bash 2>/dev/null && log_success "Docker" || log_warning "Docker"
         else
-            install_package "docker" "docker.io"
+            install_package "docker"
         fi
     else
         log_success "Docker (already installed)"
     fi
     
-    # Docker Compose
-    if ! command -v docker-compose &>/dev/null; then
-        log_status "Installing Docker Compose..."
-        sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" \
-        -o /usr/local/bin/docker-compose 2>/dev/null
-        sudo chmod +x /usr/local/bin/docker-compose 2>/dev/null && log_success "Docker Compose" || log_warning "Docker Compose"
-    else
-        log_success "Docker Compose (already installed)"
-    fi
-    
-    # Kubernetes (kubectl)
+    # Kubernetes
     if ! command -v kubectl &>/dev/null; then
         log_status "Installing kubectl..."
-        KUBE_VERSION=$(curl -s https://dl.k8s.io/release/stable.txt)
-        curl -LO "https://dl.k8s.io/release/${KUBE_VERSION}/bin/linux/amd64/kubectl" 2>/dev/null
+        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" 2>/dev/null
         if [ -f "kubectl" ]; then
             sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
             rm -f kubectl
@@ -357,139 +479,73 @@ install_devops_tools() {
     else
         log_success "kubectl (already installed)"
     fi
-    
-    # Helm
-    if ! command -v helm &>/dev/null; then
-        log_status "Installing Helm..."
-        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 2>/dev/null | bash 2>/dev/null && \
-        log_success "Helm" || log_warning "Helm"
-    else
-        log_success "Helm (already installed)"
-    fi
-    
-    # Terraform
-    if ! command -v terraform &>/dev/null; then
-        log_status "Installing Terraform..."
-        TERRAFORM_VERSION="1.7.0"
-        TERRAFORM_OS="linux"
-        TERRAFORM_ARCH="amd64"
-        [ "$OS_TYPE" = "macos" ] && TERRAFORM_OS="darwin"
-        
-        wget -q "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_${TERRAFORM_OS}_${TERRAFORM_ARCH}.zip" \
-        -O /tmp/terraform.zip 2>/dev/null
-        if [ -f "/tmp/terraform.zip" ]; then
-            unzip -q /tmp/terraform.zip -d /tmp 2>/dev/null
-            sudo mv /tmp/terraform /usr/local/bin/ 2>/dev/null
-            rm -f /tmp/terraform.zip
-            log_success "Terraform"
-        fi
-    else
-        log_success "Terraform (already installed)"
-    fi
-    
-    # Ansible
-    if ! command -v ansible &>/dev/null; then
-        log_status "Installing Ansible..."
-        python3 -m pip install --user ansible 2>/dev/null && log_success "Ansible" || log_warning "Ansible"
-    else
-        log_success "Ansible (already installed)"
-    fi
-    
-    # Vagrant
-    install_package "vagrant"
-    
-    # Packer
-    if ! command -v packer &>/dev/null; then
-        log_status "Installing Packer..."
-        PACKER_VERSION="1.9.4"
-        wget -q "https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_linux_amd64.zip" \
-        -O /tmp/packer.zip 2>/dev/null
-        if [ -f "/tmp/packer.zip" ]; then
-            unzip -q /tmp/packer.zip -d /tmp 2>/dev/null
-            sudo mv /tmp/packer /usr/local/bin/ 2>/dev/null
-            rm -f /tmp/packer.zip
-            log_success "Packer"
-        fi
-    else
-        log_success "Packer (already installed)"
-    fi
 }
 
-# === Install Programming Languages ===
 install_programming_languages() {
     log_status "Installing Programming Languages..."
     
-    # Python 3
-    install_package "python3"
+    # Python
+    if ! command -v python3 &>/dev/null; then
+        install_package "python3"
+    else
+        log_success "Python 3 (already installed)"
+    fi
+    
     install_package "python3-pip"
-    install_package "python3-dev"
     
     # Node.js
     if ! command -v node &>/dev/null; then
-        log_status "Installing Node.js..."
-        if [ "$OS_TYPE" = "linux" ]; then
+        if [ "$IS_LINUX" = true ] && command -v apt-get &>/dev/null; then
             curl -fsSL https://deb.nodesource.com/setup_20.x 2>/dev/null | sudo -E bash - 2>/dev/null
-            sudo apt-get install -y nodejs 2>/dev/null && log_success "Node.js" || log_warning "Node.js"
-        elif [ "$OS_TYPE" = "macos" ]; then
-            brew install node 2>/dev/null && log_success "Node.js" || log_warning "Node.js"
         fi
+        install_package "nodejs"
     else
         log_success "Node.js (already installed)"
     fi
     
-    # Go
-    if ! command -v go &>/dev/null; then
-        log_status "Installing Go..."
-        GO_VERSION="1.21.3"
-        GO_OS="linux"
-        GO_ARCH="amd64"
-        [ "$OS_TYPE" = "macos" ] && GO_OS="darwin"
-        
-        wget -q "https://go.dev/dl/go${GO_VERSION}.${GO_OS}-${GO_ARCH}.tar.gz" -O /tmp/go.tar.gz 2>/dev/null
-        if [ -f "/tmp/go.tar.gz" ]; then
-            sudo rm -rf /usr/local/go
-            sudo tar -C /usr/local -xzf /tmp/go.tar.gz 2>/dev/null
-            rm -f /tmp/go.tar.gz
-            log_success "Go"
+    # Go (skip on mobile)
+    if [ "$IS_ANDROID" = false ] && [ "$IS_IOS" = false ]; then
+        if ! command -v go &>/dev/null; then
+            log_status "Installing Go..."
+            GO_VERSION="1.21.3"
+            GO_OS="linux"
+            GO_ARCH="amd64"
+            
+            wget -q "https://go.dev/dl/go${GO_VERSION}.${GO_OS}-${GO_ARCH}.tar.gz" -O /tmp/go.tar.gz 2>/dev/null
+            if [ -f "/tmp/go.tar.gz" ]; then
+                sudo rm -rf /usr/local/go
+                sudo tar -C /usr/local -xzf /tmp/go.tar.gz 2>/dev/null
+                rm -f /tmp/go.tar.gz
+                log_success "Go"
+            fi
+        else
+            log_success "Go (already installed)"
         fi
-    else
-        log_success "Go (already installed)"
     fi
     
-    # Rust
-    if ! command -v rustc &>/dev/null; then
-        log_status "Installing Rust..."
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs 2>/dev/null | sh -s -- -y 2>/dev/null && \
-        log_success "Rust" || log_warning "Rust"
-    else
-        log_success "Rust (already installed)"
+    # Rust (skip on mobile)
+    if [ "$IS_ANDROID" = false ] && [ "$IS_IOS" = false ]; then
+        if ! command -v rustc &>/dev/null; then
+            log_status "Installing Rust..."
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs 2>/dev/null | sh -s -- -y 2>/dev/null && \
+            log_success "Rust" || log_warning "Rust"
+        else
+            log_success "Rust (already installed)"
+        fi
     fi
-    
-    # Ruby
-    install_package "ruby"
-    install_package "ruby-dev"
-    
-    # Java
-    install_package "default-jdk"
-    install_package "maven"
-    
-    # C/C++
-    install_package "build-essential"
-    install_package "gcc"
-    install_package "g++"
-    install_package "cmake"
 }
 
-# === Install Databases ===
 install_databases() {
     log_status "Installing Database Systems..."
     
+    # Skip on mobile
+    if [ "$IS_ANDROID" = true ] || [ "$IS_IOS" = true ]; then
+        log_warning "Skipping databases on mobile platform"
+        return
+    fi
+    
     local databases=(
-        "postgresql" "postgresql-contrib"
-        "mysql-server" "mysql-client"
-        "mongodb" "mongosh"
-        "redis-server"
-        "sqlite3"
+        "postgresql" "mysql-server" "mongodb" "redis-server" "sqlite3"
     )
     
     for db in "${databases[@]}"; do
@@ -497,128 +553,86 @@ install_databases() {
     done
 }
 
-# === Install Python Packages ===
 install_python_packages() {
-    log_status "Installing Python Security & Dev Packages..."
+    log_status "Installing Python Packages..."
     
     python3 -m pip install --upgrade pip 2>/dev/null || true
     
     local packages=(
-        # Security & Hacking
-        "paramiko" "cryptography" "pycryptodome" "scapy" "pwntools"
-        "impacket" "requests" "beautifulsoup4" "lxml"
-        
-        # Web & API
-        "flask" "django" "fastapi" "uvicorn" "sqlalchemy"
-        "pytest" "selenium" "requests-oauthlib"
-        
-        # Intelligence
-        "shodan" "censys" "dnspython" "netaddr" "ipaddress"
-        
-        # Data & Analysis
-        "numpy" "pandas" "matplotlib" "scipy" "scikit-learn"
-        "tensorflow" "torch" "keras"
-        
-        # Web Scraping
-        "scrapy" "mechanize" "playwright"
-        
-        # Utilities
-        "rich" "click" "colorama" "tqdm" "jinja2"
+        "paramiko" "requests" "beautifulsoup4" "cryptography"
+        "flask" "django" "pytest" "numpy" "pandas"
+        "rich" "click" "colorama"
     )
     
     for pkg in "${packages[@]}"; do
-        log_status "Installing Python package: $pkg..."
-        python3 -m pip install "$pkg" 2>/dev/null || log_warning "Python package: $pkg"
+        python3 -m pip install "$pkg" 2>/dev/null || log_warning "Python: $pkg"
     done
 }
 
-# === Install Node.js Global Packages ===
-install_nodejs_packages() {
-    log_status "Installing Node.js Global Packages..."
-    
-    if ! command -v npm &>/dev/null; then
-        log_warning "npm not found, skipping Node packages"
-        return
-    fi
-    
-    local packages=(
-        "http-server" "webpack" "webpack-cli" "webpack-dev-server"
-        "eslint" "prettier" "babel" "mocha" "jest" "pm2"
-        "nodemon" "gulp" "grunt" "express-generator"
-    )
-    
-    for pkg in "${packages[@]}"; do
-        log_status "Installing npm package: $pkg..."
-        npm install -g "$pkg" 2>/dev/null || log_warning "npm package: $pkg"
-    done
-}
-
-# === Install AI/ML Tools ===
 install_ai_ml_tools() {
     log_status "Installing AI/ML Tools..."
     
-    # Jupyter
-    python3 -m pip install jupyter jupyterlab 2>/dev/null || log_warning "Jupyter"
-    
-    # TensorFlow/PyTorch already in pip packages
-    # Hugging Face
-    python3 -m pip install transformers datasets 2>/dev/null || log_warning "Hugging Face"
-    
-    # Ollama (Local LLM)
-    if ! command -v ollama &>/dev/null && [ "$OS_TYPE" = "linux" ]; then
-        log_status "Installing Ollama..."
-        curl -fsSL https://ollama.ai/install.sh 2>/dev/null | sh 2>/dev/null && \
-        log_success "Ollama" || log_warning "Ollama"
+    # Skip on mobile/limited resources
+    if [ "$IS_ANDROID" = true ] || [ "$IS_IOS" = true ]; then
+        log_warning "Skipping AI/ML tools on mobile platform"
+        return
     fi
+    
+    python3 -m pip install jupyter jupyterlab 2>/dev/null || log_warning "Jupyter"
+    python3 -m pip install transformers datasets 2>/dev/null || log_warning "Hugging Face"
 }
 
-# === Install Web3/Blockchain Tools ===
 install_web3_tools() {
-    log_status "Installing Web3 & Blockchain Tools..."
+    log_status "Installing Web3 Tools..."
     
-    # Hardhat
-    npm install -g hardhat 2>/dev/null || log_warning "Hardhat"
+    # Skip on mobile
+    if [ "$IS_ANDROID" = true ] || [ "$IS_IOS" = true ]; then
+        log_warning "Skipping Web3 tools on mobile platform"
+        return
+    fi
     
-    # Truffle
-    npm install -g truffle 2>/dev/null || log_warning "Truffle"
+    if command -v npm &>/dev/null; then
+        npm install -g hardhat 2>/dev/null || log_warning "Hardhat"
+        npm install -g truffle 2>/dev/null || log_warning "Truffle"
+    fi
     
-    # Ganache
-    npm install -g ganache 2>/dev/null || log_warning "Ganache"
-    
-    # Web3.py
     python3 -m pip install web3 2>/dev/null || log_warning "web3.py"
-    
-    # Ethers
-    npm install -g ethers 2>/dev/null || log_warning "ethers"
 }
 
-# === Download Security Resources ===
 download_security_resources() {
-    log_status "Downloading Security Wordlists & Resources..."
+    log_status "Downloading Security Resources..."
     
     mkdir -p "$TOOL_X_TOOLS"
     cd "$TOOL_X_TOOLS" || exit
     
-    local repos=(
-        "https://github.com/danielmiessler/SecLists.git:SecLists"
-        "https://github.com/projectdiscovery/nuclei-templates.git:nuclei-templates"
-        "https://github.com/offensive-security/exploit-database.git:exploit-db"
-        "https://github.com/Dewalt-arch/pimpmykali.git:pimpmykali"
-        "https://github.com/carlospolop/PEASS-ng.git:PEASS"
-        "https://github.com/swisskyrepo/PayloadsAllTheThings.git:PayloadsAllTheThings"
-    )
-    
-    for repo_info in "${repos[@]}"; do
-        IFS=':' read -r url name <<< "$repo_info"
-        log_status "Cloning $name..."
-        git clone --depth 1 "$url" "$name" 2>/dev/null && \
-        log_success "$name" || log_warning "$name"
-    done
+    # For mobile, only download lightweight resources
+    if [ "$IS_ANDROID" = true ] || [ "$IS_IOS" = true ]; then
+        log_status "Downloading mobile-friendly security resources..."
+        git clone --depth 1 https://github.com/swisskyrepo/PayloadsAllTheThings.git 2>/dev/null && \
+        log_success "PayloadsAllTheThings" || log_warning "PayloadsAllTheThings"
+    else
+        log_status "Downloading full security resources..."
+        
+        local repos=(
+            "https://github.com/danielmiessler/SecLists.git:SecLists"
+            "https://github.com/projectdiscovery/nuclei-templates.git:nuclei-templates"
+            "https://github.com/swisskyrepo/PayloadsAllTheThings.git:PayloadsAllTheThings"
+        )
+        
+        for repo_info in "${repos[@]}"; do
+            IFS=':' read -r url name <<< "$repo_info"
+            git clone --depth 1 "$url" "$name" 2>/dev/null && \
+            log_success "$name" || log_warning "$name"
+        done
+    fi
 }
 
-# === Create Main Tool-X Command ===
+################################################################################
+# COMMAND & SHELL SETUP
+################################################################################
+
 create_toolx_command() {
-    log_status "Creating Tool-X Main Command..."
+    log_status "Creating Tool-X main command..."
     
     cat > "${TOOL_X_BIN}/toolx-main" << 'TOOLXEOF'
 #!/bin/bash
@@ -629,137 +643,40 @@ TOOL_X_TOOLS="${TOOL_X_HOME}/tools"
 show_help() {
     cat << 'HELP'
 ╔══════════════════════════════════════════════════════════════╗
-║                   TOOL-X v4.0 Command Menu                  ║
-║              Ultimate Security & DevOps Toolkit              ║
+║                   TOOL-X v5.0 Command Menu                  ║
+║            Multi-Platform Universal Toolkit                  ║
 ╚══════════════════════════════════════════════════════════════╝
 
-SECURITY & HACKING:
-  toolx recon             - Reconnaissance tools (nmap, whois, etc.)
-  toolx scan              - Vulnerability scanning (nikto, sqlmap, etc.)
-  toolx web               - Web application testing (burp, zaproxy)
-  toolx exploit           - Exploitation frameworks (metasploit)
-  toolx crypto            - Cryptography & hashing (john, hashcat)
-  toolx wireless          - Wireless network tools (aircrack)
-  toolx reverse           - Reverse engineering (ghidra, radare2)
-  toolx forensics         - Digital forensics (sleuthkit, exiftool)
+SECURITY:
+  toolx recon              Reconnaissance tools
+  toolx scan               Vulnerability scanning
+  toolx exploit            Exploitation frameworks
+  toolx crypto             Cryptography & hashing
 
-DEVOPS & CLOUD:
-  toolx docker            - Docker commands & management
-  toolx k8s               - Kubernetes operations
-  toolx terraform         - Infrastructure as Code
-  toolx ansible           - Ansible automation
-  toolx cloud             - Cloud CLI tools (AWS, GCP, Azure)
+DEVOPS:
+  toolx docker             Docker management
+  toolx k8s                Kubernetes operations
+  toolx cloud              Cloud CLI tools
 
 DEVELOPMENT:
-  toolx python            - Python environment management
-  toolx nodejs            - Node.js tools & npm packages
-  toolx go                - Go development environment
-  toolx rust              - Rust development environment
-  toolx java              - Java/Maven development
-
-AI/ML:
-  toolx ai                - AI & Machine Learning tools
-  toolx jupyter           - Launch Jupyter Lab
-  toolx ollama            - Local LLM management
-
-WEB3:
-  toolx web3              - Web3 & blockchain tools
-  toolx hardhat           - Smart contract development
-  toolx web3py            - Web3 Python library
-
-DATABASES:
-  toolx db                - Database tools
-  toolx postgres          - PostgreSQL management
-  toolx mongodb           - MongoDB management
-  toolx redis             - Redis management
+  toolx python             Python environment
+  toolx nodejs             Node.js tools
+  toolx code               Visual Studio Code
 
 SYSTEM:
-  toolx status            - Installation status
-  toolx update            - Update Tool-X
-  toolx list              - List all tools
-  toolx resources         - Security resources location
-  toolx config            - Configuration management
-  toolx logs              - View installation logs
-  toolx help              - Show this help
-
-EXAMPLES:
-  toolx status
-  toolx recon --help
-  toolx docker ps
-  toolx k8s nodes
-  toolx python shell
-  toolx ai llm
-  toolx web3 deploy
-
-WORDLISTS & RESOURCES:
-  ${TOOL_X_TOOLS}/SecLists/
-  ${TOOL_X_TOOLS}/nuclei-templates/
-  ${TOOL_X_TOOLS}/exploit-db/
-  ${TOOL_X_TOOLS}/PEASS/
-  ${TOOL_X_TOOLS}/PayloadsAllTheThings/
-
-DOCUMENTATION:
-  GitHub: https://github.com/dannywise093-crypto/Tool-X
-  Wiki:   https://github.com/dannywise093-crypto/Tool-X/wiki
+  toolx status             Installation status
+  toolx help               Show this help
 
 HELP
 }
 
 case "${1}" in
-    recon|scan|web|exploit|crypto|wireless|reverse|forensics)
-        echo "🔓 Security Category: $1"
-        ;;
-    docker|k8s|terraform|ansible|cloud)
-        echo "⚙️  DevOps Category: $1"
-        ;;
-    python|nodejs|go|rust|java)
-        echo "💻 Development Category: $1"
-        ;;
-    ai|jupyter|ollama)
-        echo "🤖 AI/ML Category: $1"
-        ;;
-    web3|hardhat|web3py)
-        echo "🔗 Web3 Category: $1"
-        ;;
-    db|postgres|mongodb|redis)
-        echo "🗄️  Database Category: $1"
-        ;;
-    status)
-        echo -e "\n${CYAN}=== TOOL-X Installation Status ===${NC}\n"
-        echo "Home: ${TOOL_X_HOME}"
-        echo "Binaries: ${TOOL_X_HOME}/bin"
-        echo "Tools: ${TOOL_X_TOOLS}"
-        echo "Config: ${TOOL_X_HOME}/config"
-        echo "Logs: ${TOOL_X_HOME}/logs"
-        echo ""
-        echo "Installed Commands:"
-        ls -1 ${TOOL_X_HOME}/bin/ 2>/dev/null | head -20
-        ;;
-    resources)
-        echo -e "\n${CYAN}=== Security Resources ===${NC}\n"
-        du -sh ${TOOL_X_TOOLS}/*/ 2>/dev/null
-        ;;
-    list)
-        echo "Listing all installed tools..."
-        echo ""
-        echo "Binaries:"
-        ls -1 /usr/local/bin/ | grep -E "^(nmap|sqlmap|metasploit|docker|kubectl|terraform)" | head -20
-        ;;
-    logs)
-        tail -f ${TOOL_X_HOME}/logs/setup-*.log
-        ;;
-    update)
-        echo "Updating Tool-X..."
-        git -C "${TOOL_X_HOME}" pull 2>/dev/null || echo "Update not available"
-        ;;
-    help|"")
-        show_help
-        ;;
-    *)
-        echo "Unknown command: $1"
-        echo "Run 'toolx help' for available commands"
-        exit 1
-        ;;
+    recon|scan|exploit|crypto) echo "🔓 Security: $1" ;;
+    docker|k8s|cloud) echo "⚙️  DevOps: $1" ;;
+    python|nodejs|code) echo "💻 Development: $1" ;;
+    status) echo "Tool-X: ${TOOL_X_HOME}" ;;
+    help|"") show_help ;;
+    *) echo "Unknown: $1"; show_help; exit 1 ;;
 esac
 TOOLXEOF
     
@@ -767,12 +684,11 @@ TOOLXEOF
     log_success "Tool-X command created"
 }
 
-# === Create Global Command Wrappers ===
 create_global_commands() {
     log_status "Creating global command wrappers..."
     
     for cmd in "${COMMANDS[@]}"; do
-        if [ "$OS_TYPE" = "termux" ]; then
+        if [ "$IS_ANDROID" = true ]; then
             echo "#!/bin/bash" > "$BIN_DIR/$cmd"
             echo "exec ${TOOL_X_BIN}/toolx-main \"\$@\"" >> "$BIN_DIR/$cmd"
             chmod +x "$BIN_DIR/$cmd"
@@ -783,10 +699,9 @@ create_global_commands() {
         fi
     done
     
-    log_success "Global commands created in $BIN_DIR"
+    log_success "Global commands created"
 }
 
-# === Setup Shell Integration ===
 setup_shell_integration() {
     log_status "Setting up shell integration..."
     
@@ -796,23 +711,14 @@ setup_shell_integration() {
     if ! grep -q "Tool-X" "$rc_file" 2>/dev/null; then
         cat >> "$rc_file" << 'SHELL_CONFIG'
 
-# ==================== Tool-X v4.0 ====================
+# ==================== Tool-X v5.0 ====================
 export TOOL_X_HOME="$HOME/.tool-x"
 export TOOL_X_BIN="${TOOL_X_HOME}/bin"
 export TOOL_X_TOOLS="${TOOL_X_HOME}/tools"
 export PATH="${TOOL_X_BIN}:${PATH}"
 
-# Language Paths
-export GOPATH="${TOOL_X_HOME}/go"
-export GOROOT="/usr/local/go"
-export PATH="${GOROOT}/bin:${GOPATH}/bin:${PATH}"
-[ -d "$HOME/.cargo/bin" ] && export PATH="$HOME/.cargo/bin:${PATH}"
-
-# Aliases
 alias toolx='${TOOL_X_BIN}/toolx-main'
 alias ll='ls -lah'
-alias la='ls -A'
-alias l='ls -CF'
 
 # ======================================================
 SHELL_CONFIG
@@ -821,17 +727,21 @@ SHELL_CONFIG
     fi
 }
 
-# === Generate Installation Report ===
+################################################################################
+# REPORTING
+################################################################################
+
 generate_report() {
     log_status "Generating installation report..."
     
     local report="${TOOL_X_HOME}/INSTALLATION_REPORT.md"
     
     cat > "$report" << EOF
-# Tool-X v4.0 Installation Report
+# Tool-X v5.0 Installation Report
 
 **Generated:** $(date)
-**System:** $OS_TYPE ($PKG_MANAGER)
+**Platform:** $PLATFORM ($OS_TYPE)
+**Package Manager:** $PKG_MANAGER
 **Home:** $TOOL_X_HOME
 
 ## Installation Summary
@@ -840,193 +750,102 @@ generate_report() {
 - **Failed:** $FAILED
 - **Skipped:** $SKIPPED
 
-## Tool Categories Installed
+## Platform Details
 
-### Security & Hacking
-- ✓ Kali Linux Tools (nmap, metasploit, sqlmap, burp, zaproxy, etc.)
-- ✓ Reconnaissance tools (whois, dnsenum, fierce, etc.)
-- ✓ Exploitation frameworks
-- ✓ Cryptography & hashing
-- ✓ Reverse engineering (ghidra, radare2, binwalk)
-- ✓ Forensics tools
-- ✓ Wireless security
+- Windows Support: VSCode, Git, Developer Tools
+- Android (Termux): Micro editor, Security tools
+- iOS (iSH): Alpine-compatible tools
+- Linux/macOS: Full ecosystem
 
-### Cloud Platforms
-- ✓ AWS CLI v2
-- ✓ Google Cloud SDK
-- ✓ Azure CLI
-- ✓ DigitalOcean CLI
+## Tools Installed by Category
 
-### DevOps & Infrastructure
-- ✓ Docker & Docker Compose
-- ✓ Kubernetes (kubectl, Helm)
-- ✓ Terraform
-- ✓ Ansible
-- ✓ Vagrant & Packer
-
-### Programming Languages
-- ✓ Python 3 with pip
-- ✓ Node.js with npm
-- ✓ Go
-- ✓ Rust
-- ✓ Ruby
-- ✓ Java & Maven
-
-### Databases
-- ✓ PostgreSQL
-- ✓ MySQL
-- ✓ MongoDB
-- ✓ Redis
-- ✓ SQLite
-
-### Development & Testing
-- ✓ Python packages (security, web, data science)
-- ✓ Node.js global tools
-- ✓ Testing frameworks
-
-### AI/ML & Data Science
-- ✓ TensorFlow
-- ✓ PyTorch
-- ✓ Jupyter Lab
-- ✓ Hugging Face
-- ✓ Ollama (Local LLM)
-
-### Web3 & Blockchain
-- ✓ Hardhat
-- ✓ Truffle
-- ✓ Ganache
-- ✓ Web3.py
-- ✓ ethers.js
-
-### Security Resources
-- ✓ SecLists wordlists
-- ✓ Nuclei templates
-- ✓ Exploit Database
-- ✓ PEASS
-- ✓ PayloadsAllTheThings
-
-## Directory Structure
-
-\`\`\`
-$TOOL_X_HOME/
-├── bin/                 # Executable commands
-├── tools/               # Downloaded resources & wordlists
-├── modules/             # Custom Tool-X modules
-├── config/              # Configuration files
-├── logs/                # Installation logs
-├── data/                # Data files
-└── scripts/             # Helper scripts
-\`\`\`
+- Security Tools
+- Cloud Platforms
+- DevOps & Infrastructure
+- Programming Languages
+- Databases
+- Python Packages
+- AI/ML Tools
+- Web3/Blockchain
 
 ## Quick Start
 
-1. **Reload shell:**
-   \`\`\`bash
-   source ~/.bashrc  # or ~/.zshrc
-   \`\`\`
-
-2. **Verify installation:**
-   \`\`\`bash
-   toolx status
-   \`\`\`
-
-3. **List available commands:**
-   \`\`\`bash
-   toolx help
-   \`\`\`
-
-4. **Use any category:**
-   \`\`\`bash
-   toolx recon
-   toolx docker
-   toolx kubernetes
-   toolx ai
-   \`\`\`
-
-## Commands Available
-
-- \`toolx\` - Main command
-- \`tool-x\` - Alias
-- \`Tool-X\` - Alias
-- \`TOOLX\` - Alias
+1. Reload shell: \`source ~/.bashrc\`
+2. Check status: \`toolx status\`
+3. View help: \`toolx help\`
 
 ## Support
 
-- **GitHub:** https://github.com/dannywise093-crypto/Tool-X
-- **Issues:** Report bugs and request features
-- **Wiki:** Full documentation and guides
-
-## Security Notes
-
-- Always use tools ethically and legally
-- Ensure you have proper authorization for testing
-- Keep tools and dependencies updated regularly
-- Review logs regularly: \`toolx logs\`
+GitHub: https://github.com/dannywise093-crypto/Tool-X
 
 ---
-*Tool-X v4.0 - Next-Generation Security & DevOps Toolkit*
+*Tool-X v5.0 - Multi-Platform Universal Toolkit*
 EOF
     
     cat "$report"
-    log_success "Report saved to $report"
+    log_success "Report generated"
 }
 
-# === MAIN EXECUTION ===
+################################################################################
+# MAIN EXECUTION
+################################################################################
+
 main() {
     print_banner
     
     mkdir -p "$TOOL_X_LOGS"
     {
-        log_status "Tool-X v4.0 Installation Started"
-        log_status "Timestamp: $(date)"
-        log_status "OS: $OSTYPE"
+        log "Tool-X v5.0 Installation Started"
+        log "Timestamp: $(date)"
+        log "OSTYPE: $OSTYPE"
     } > "$LOG_FILE"
     
-    # Detection phase
-    detect_os
+    # Core setup
+    detect_platform
     init_environment
     update_system
     
-    # Installation phase
-    install_core_dependencies
+    # Platform-specific installation
+    if [ "$IS_WINDOWS" = true ]; then
+        install_windows_tools
+    elif [ "$IS_ANDROID" = true ]; then
+        install_android_tools
+    elif [ "$IS_IOS" = true ]; then
+        install_ios_tools
+    else
+        install_linux_macos_tools
+    fi
+    
+    # Universal installations (skipped on mobile as needed)
     install_kali_tools
     install_cloud_tools
     install_devops_tools
     install_programming_languages
     install_databases
     install_python_packages
-    install_nodejs_packages
     install_ai_ml_tools
     install_web3_tools
-    
-    # Resources phase
     download_security_resources
     
-    # Configuration phase
+    # Finalization
     create_toolx_command
     create_global_commands
     setup_shell_integration
-    
-    # Finalization
     generate_report
     
-    # Completion message
+    # Completion
     log "\n${GREEN}════════════════════════════════════════════════════════════${NC}"
-    log "${GREEN}   ✓✓✓ Tool-X v4.0 Installation COMPLETE! ✓✓✓${NC}"
+    log "${GREEN}   ✓✓✓ Tool-X v5.0 Installation COMPLETE! ✓✓✓${NC}"
     log "${GREEN}════════════════════════════════════════════════════════════${NC}\n"
     
     log "${CYAN}Next Steps:${NC}"
-    log "${YELLOW}1. Reload your shell:${NC}     source ~/.bashrc"
-    log "${YELLOW}2. Verify installation:${NC}   toolx status"
-    log "${YELLOW}3. View help:${NC}             toolx help"
-    log "${YELLOW}4. Check logs:${NC}            toolx logs\n"
+    log "${YELLOW}1. Reload shell:${NC}     source ~/.bashrc"
+    log "${YELLOW}2. Verify setup:${NC}     toolx status"
+    log "${YELLOW}3. View help:${NC}        toolx help\n"
     
-    log "${CYAN}Supported Commands:${NC} ${COMMANDS[*]}\n"
-    
-    log "${BLUE}Installation Summary:${NC}"
-    log "  Installed: $INSTALLED"
-    log "  Failed: $FAILED"
-    log "  Skipped: $SKIPPED\n"
+    log "${BLUE}Summary:${NC}"
+    log "  Platform: $PLATFORM"
+    log "  Installed: $INSTALLED | Failed: $FAILED | Skipped: $SKIPPED\n"
     
     log "${MAGENTA}GitHub: https://github.com/dannywise093-crypto/Tool-X${NC}\n"
 }
